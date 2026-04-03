@@ -1115,73 +1115,6 @@
       <div class="collar-preview" id="collarPreview">
         <div class="collar-preview-title">Protection Details</div>
 
-        <!-- SVG Graph: shows what happens if Tesla goes up or down -->
-        <div class="collar-graph">
-          <svg viewBox="0 0 340 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Background grid lines -->
-            <line x1="40" y1="20" x2="40" y2="148" stroke="#2A2A2E" stroke-width="0.5"/>
-            <line x1="40" y1="148" x2="320" y2="148" stroke="#2A2A2E" stroke-width="0.5"/>
-            <line x1="40" y1="84" x2="320" y2="84" stroke="#2A2A2E" stroke-width="0.5" stroke-dasharray="3 3"/>
-            <line x1="40" y1="40" x2="320" y2="40" stroke="#2A2A2E" stroke-width="0.5" stroke-dasharray="3 3"/>
-            <line x1="40" y1="126" x2="320" y2="126" stroke="#2A2A2E" stroke-width="0.5" stroke-dasharray="3 3"/>
-
-            <!-- Y-axis labels -->
-            <text x="36" y="44" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$260</text>
-            <text x="36" y="88" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$225</text>
-            <text x="36" y="130" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$214</text>
-            <text x="36" y="152" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$200</text>
-
-            <!-- X-axis labels -->
-            <text x="50" y="164" fill="#636366" font-size="9" font-family="Inter,sans-serif">Today</text>
-            <text x="290" y="164" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">30 days</text>
-
-            <!-- Protection zone (green shaded area between floor and cap) -->
-            <rect x="40" y="40" width="280" height="86" rx="2" fill="#10B981" opacity="0.06"/>
-
-            <!-- Cap line (top of protection) -->
-            <line x1="40" y1="40" x2="320" y2="40" stroke="#10B981" stroke-width="1.5" stroke-dasharray="6 3"/>
-            <rect x="296" y="30" width="24" height="16" rx="4" fill="#10B981" opacity="0.15"/>
-            <text x="308" y="41" text-anchor="middle" fill="#10B981" font-size="8" font-weight="600" font-family="Inter,sans-serif">Cap</text>
-
-            <!-- Floor line (bottom of protection) -->
-            <line x1="40" y1="126" x2="320" y2="126" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="6 3"/>
-            <rect x="290" y="117" width="30" height="16" rx="4" fill="#EF4444" opacity="0.15"/>
-            <text x="305" y="128" text-anchor="middle" fill="#EF4444" font-size="8" font-weight="600" font-family="Inter,sans-serif">Floor</text>
-
-            <!-- Simulated price movement (wavy line staying in the zone) -->
-            <path d="M50 84 C70 84, 80 72, 95 68 S120 78, 140 74 S165 60, 180 65 S200 80, 215 76 S235 58, 250 62 S270 72, 285 68 S300 55, 310 60"
-              stroke="#10B981" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
-
-            <!-- Gradient fill under the price line -->
-            <path d="M50 84 C70 84, 80 72, 95 68 S120 78, 140 74 S165 60, 180 65 S200 80, 215 76 S235 58, 250 62 S270 72, 285 68 S300 55, 310 60 L310 148 L50 148 Z"
-              fill="url(#priceGradient)" opacity="0.3"/>
-
-            <defs>
-              <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#10B981" stop-opacity="0.4"/>
-                <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-
-            <!-- Current price dot -->
-            <circle cx="50" cy="84" r="5" fill="#10B981" class="price-dot"/>
-            <circle cx="50" cy="84" r="9" fill="#10B981" opacity="0.15"/>
-
-            <!-- "You're here" label -->
-            <text x="62" y="80" fill="#10B981" font-size="9" font-weight="600" font-family="Inter,sans-serif">$225 now</text>
-
-            <!-- Scenario labels -->
-            <text x="180" y="32" text-anchor="middle" fill="#10B981" font-size="8.5" font-weight="500" font-family="Inter,sans-serif" opacity="0.7">If Tesla rises: capped at $258.75</text>
-            <text x="180" y="142" text-anchor="middle" fill="#EF4444" font-size="8.5" font-weight="500" font-family="Inter,sans-serif" opacity="0.7">If Tesla drops: protected at $213.75</text>
-          </svg>
-
-          <div class="collar-graph-legend">
-            <span><span class="legend-dot" style="background:rgba(16,185,129,0.25)"></span> Protected zone</span>
-            <span><span class="legend-dot" style="background:#10B981"></span> Price trend</span>
-            <span><span class="legend-dot" style="background:#EF4444"></span> Floor</span>
-          </div>
-        </div>
-
         <!-- Key numbers in a 3-column grid -->
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
           <div style="background:var(--bg-elevated); border-radius:8px; padding:12px;">
@@ -1222,7 +1155,49 @@
           How does this work?
         </button>
         <div class="expandable-content" id="expandableContent">
-          We reserve a small portion of your Tesla shares and wrap them in a zero-cost options collar (the put and call premiums cancel out). The green zone on the graph is your protection range. Pay back anytime within your chosen window, and your shares are released instantly. No fees, no interest, no catch.
+          <div class="collar-graph" style="margin-bottom:12px;">
+            <svg viewBox="0 0 340 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="40" y1="20" x2="40" y2="148" stroke="#2A2A2E" stroke-width="0.5"/>
+              <line x1="40" y1="148" x2="320" y2="148" stroke="#2A2A2E" stroke-width="0.5"/>
+              <line x1="40" y1="84" x2="320" y2="84" stroke="#2A2A2E" stroke-width="0.5" stroke-dasharray="3 3"/>
+              <line x1="40" y1="40" x2="320" y2="40" stroke="#2A2A2E" stroke-width="0.5" stroke-dasharray="3 3"/>
+              <line x1="40" y1="126" x2="320" y2="126" stroke="#2A2A2E" stroke-width="0.5" stroke-dasharray="3 3"/>
+              <text x="36" y="44" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$260</text>
+              <text x="36" y="88" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$225</text>
+              <text x="36" y="130" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$214</text>
+              <text x="36" y="152" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$200</text>
+              <text x="50" y="164" fill="#636366" font-size="9" font-family="Inter,sans-serif">Today</text>
+              <text x="290" y="164" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">30 days</text>
+              <rect x="40" y="40" width="280" height="86" rx="2" fill="#10B981" opacity="0.06"/>
+              <line x1="40" y1="40" x2="320" y2="40" stroke="#10B981" stroke-width="1.5" stroke-dasharray="6 3"/>
+              <rect x="296" y="30" width="24" height="16" rx="4" fill="#10B981" opacity="0.15"/>
+              <text x="308" y="41" text-anchor="middle" fill="#10B981" font-size="8" font-weight="600" font-family="Inter,sans-serif">Cap</text>
+              <line x1="40" y1="126" x2="320" y2="126" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="6 3"/>
+              <rect x="290" y="117" width="30" height="16" rx="4" fill="#EF4444" opacity="0.15"/>
+              <text x="305" y="128" text-anchor="middle" fill="#EF4444" font-size="8" font-weight="600" font-family="Inter,sans-serif">Floor</text>
+              <path d="M50 84 C70 84, 80 72, 95 68 S120 78, 140 74 S165 60, 180 65 S200 80, 215 76 S235 58, 250 62 S270 72, 285 68 S300 55, 310 60"
+                stroke="#10B981" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
+              <path d="M50 84 C70 84, 80 72, 95 68 S120 78, 140 74 S165 60, 180 65 S200 80, 215 76 S235 58, 250 62 S270 72, 285 68 S300 55, 310 60 L310 148 L50 148 Z"
+                fill="url(#priceGradient)" opacity="0.3"/>
+              <defs>
+                <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10B981" stop-opacity="0.4"/>
+                  <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <circle cx="50" cy="84" r="5" fill="#10B981" class="price-dot"/>
+              <circle cx="50" cy="84" r="9" fill="#10B981" opacity="0.15"/>
+              <text x="62" y="80" fill="#10B981" font-size="9" font-weight="600" font-family="Inter,sans-serif">$225 now</text>
+              <text x="180" y="32" text-anchor="middle" fill="#10B981" font-size="8.5" font-weight="500" font-family="Inter,sans-serif" opacity="0.7">If Tesla rises: capped at $258.75</text>
+              <text x="180" y="142" text-anchor="middle" fill="#EF4444" font-size="8.5" font-weight="500" font-family="Inter,sans-serif" opacity="0.7">If Tesla drops: protected at $213.75</text>
+            </svg>
+            <div class="collar-graph-legend">
+              <span><span class="legend-dot" style="background:rgba(16,185,129,0.25)"></span> Protected zone</span>
+              <span><span class="legend-dot" style="background:#10B981"></span> Price trend</span>
+              <span><span class="legend-dot" style="background:#EF4444"></span> Floor</span>
+            </div>
+          </div>
+          We reserve a small portion of your Tesla shares and wrap them in a zero-cost options collar (the put and call premiums cancel out). The green zone above is your protection range. Pay back anytime within your chosen window, and your shares are released instantly. No fees, no interest, no catch.
         </div>
       </div>
 
