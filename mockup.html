@@ -583,69 +583,48 @@
     font-size: 15px;
   }
 
-  /* Collar viz bar */
-  .collar-viz {
-    margin: 20px 0 8px;
+  /* Collar graph */
+  .collar-graph {
+    margin: 8px 0 16px;
     position: relative;
   }
 
-  .collar-bar-track {
-    height: 6px;
-    background: var(--bg-elevated);
-    border-radius: 3px;
-    position: relative;
-    overflow: visible;
+  .collar-graph svg {
+    width: 100%;
+    height: auto;
+    display: block;
   }
 
-  .collar-bar-fill {
-    position: absolute;
-    height: 100%;
-    background: linear-gradient(90deg, rgba(239,68,68,0.08), var(--collar-band), rgba(16,185,129,0.08));
-    border-radius: 3px;
-    left: 10%;
-    right: 10%;
+  @keyframes pulse-dot {
+    0%, 100% { r: 5; opacity: 1; }
+    50% { r: 7; opacity: 0.8; }
   }
 
-  .collar-marker {
-    position: absolute;
-    top: -5px;
-    width: 2px;
-    height: 16px;
-    border-radius: 1px;
+  .collar-graph .price-dot {
+    animation: pulse-dot 2.5s ease-in-out infinite;
   }
 
-  .collar-marker.floor { left: 10%; background: var(--collar-floor); }
-  .collar-marker.cap { right: 10%; background: var(--collar-cap); }
-
-  .collar-dot {
-    position: absolute;
-    top: -5px;
-    left: 35%;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-    animation: pulse 2.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
-    50% { transform: scale(1.15); box-shadow: 0 0 18px rgba(16, 185, 129, 0.6); }
-  }
-
-  .collar-labels {
+  .collar-graph-legend {
     display: flex;
-    justify-content: space-between;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 10px;
     font-size: 11px;
-    color: var(--text-tertiary);
-    margin-top: 8px;
-    font-variant-numeric: tabular-nums;
   }
 
-  .collar-labels .floor-label { color: var(--collar-floor); font-weight: 500; }
-  .collar-labels .current-label { color: var(--accent); font-weight: 500; }
-  .collar-labels .cap-label { color: var(--collar-cap); font-weight: 500; }
+  .collar-graph-legend span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-secondary);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
 
   /* Expandable */
   .expandable-trigger {
@@ -1136,17 +1115,82 @@
       <div class="collar-preview" id="collarPreview">
         <div class="collar-preview-title">Protection Details</div>
 
-        <div class="collar-viz">
-          <div class="collar-bar-track">
-            <div class="collar-bar-fill"></div>
-            <div class="collar-marker floor"></div>
-            <div class="collar-marker cap"></div>
-            <div class="collar-dot"></div>
+        <!-- SVG Graph: shows what happens if Tesla goes up or down -->
+        <div class="collar-graph">
+          <svg viewBox="0 0 340 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background grid lines -->
+            <line x1="40" y1="20" x2="40" y2="148" stroke="#2A2A2E" stroke-width="0.5"/>
+            <line x1="40" y1="148" x2="320" y2="148" stroke="#2A2A2E" stroke-width="0.5"/>
+            <line x1="40" y1="84" x2="320" y2="84" stroke="#2A2A2E" stroke-width="0.5" stroke-dasharray="3 3"/>
+            <line x1="40" y1="40" x2="320" y2="40" stroke="#2A2A2E" stroke-width="0.5" stroke-dasharray="3 3"/>
+            <line x1="40" y1="126" x2="320" y2="126" stroke="#2A2A2E" stroke-width="0.5" stroke-dasharray="3 3"/>
+
+            <!-- Y-axis labels -->
+            <text x="36" y="44" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$260</text>
+            <text x="36" y="88" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$225</text>
+            <text x="36" y="130" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$214</text>
+            <text x="36" y="152" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">$200</text>
+
+            <!-- X-axis labels -->
+            <text x="50" y="164" fill="#636366" font-size="9" font-family="Inter,sans-serif">Today</text>
+            <text x="290" y="164" text-anchor="end" fill="#636366" font-size="9" font-family="Inter,sans-serif">30 days</text>
+
+            <!-- Protection zone (green shaded area between floor and cap) -->
+            <rect x="40" y="40" width="280" height="86" rx="2" fill="#10B981" opacity="0.06"/>
+
+            <!-- Cap line (top of protection) -->
+            <line x1="40" y1="40" x2="320" y2="40" stroke="#10B981" stroke-width="1.5" stroke-dasharray="6 3"/>
+            <rect x="296" y="30" width="24" height="16" rx="4" fill="#10B981" opacity="0.15"/>
+            <text x="308" y="41" text-anchor="middle" fill="#10B981" font-size="8" font-weight="600" font-family="Inter,sans-serif">Cap</text>
+
+            <!-- Floor line (bottom of protection) -->
+            <line x1="40" y1="126" x2="320" y2="126" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="6 3"/>
+            <rect x="290" y="117" width="30" height="16" rx="4" fill="#EF4444" opacity="0.15"/>
+            <text x="305" y="128" text-anchor="middle" fill="#EF4444" font-size="8" font-weight="600" font-family="Inter,sans-serif">Floor</text>
+
+            <!-- Simulated price movement (wavy line staying in the zone) -->
+            <path d="M50 84 C70 84, 80 72, 95 68 S120 78, 140 74 S165 60, 180 65 S200 80, 215 76 S235 58, 250 62 S270 72, 285 68 S300 55, 310 60"
+              stroke="#10B981" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
+
+            <!-- Gradient fill under the price line -->
+            <path d="M50 84 C70 84, 80 72, 95 68 S120 78, 140 74 S165 60, 180 65 S200 80, 215 76 S235 58, 250 62 S270 72, 285 68 S300 55, 310 60 L310 148 L50 148 Z"
+              fill="url(#priceGradient)" opacity="0.3"/>
+
+            <defs>
+              <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#10B981" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#10B981" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+
+            <!-- Current price dot -->
+            <circle cx="50" cy="84" r="5" fill="#10B981" class="price-dot"/>
+            <circle cx="50" cy="84" r="9" fill="#10B981" opacity="0.15"/>
+
+            <!-- "You're here" label -->
+            <text x="62" y="80" fill="#10B981" font-size="9" font-weight="600" font-family="Inter,sans-serif">$225 now</text>
+
+            <!-- Scenario labels -->
+            <text x="180" y="32" text-anchor="middle" fill="#10B981" font-size="8.5" font-weight="500" font-family="Inter,sans-serif" opacity="0.7">If Tesla rises: capped at $258.75</text>
+            <text x="180" y="142" text-anchor="middle" fill="#EF4444" font-size="8.5" font-weight="500" font-family="Inter,sans-serif" opacity="0.7">If Tesla drops: protected at $213.75</text>
+          </svg>
+
+          <div class="collar-graph-legend">
+            <span><span class="legend-dot" style="background:rgba(16,185,129,0.25)"></span> Protected zone</span>
+            <span><span class="legend-dot" style="background:#10B981"></span> Price trend</span>
+            <span><span class="legend-dot" style="background:#EF4444"></span> Floor</span>
           </div>
-          <div class="collar-labels">
-            <span class="floor-label">$213.75</span>
-            <span class="current-label">$225.00</span>
-            <span class="cap-label">$258.75</span>
+        </div>
+
+        <!-- Key numbers in a compact grid -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+          <div style="background:var(--bg-elevated); border-radius:8px; padding:12px;">
+            <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:4px;">You receive</div>
+            <div style="font-size:20px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums;" id="collarReceive">$50.00</div>
+          </div>
+          <div style="background:var(--bg-elevated); border-radius:8px; padding:12px;">
+            <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:4px;">Interest rate</div>
+            <div style="font-size:20px; font-weight:700; color:var(--accent);">0%</div>
           </div>
         </div>
 
@@ -1155,21 +1199,8 @@
           <span class="collar-value" id="collarShares">0.234 TSLA ($52.63)</span>
         </div>
         <div class="collar-row">
-          <span class="collar-label">Protection range</span>
-          <span class="collar-value">$213.75 - $258.75</span>
-        </div>
-        <div class="collar-divider"></div>
-        <div class="collar-row">
-          <span class="collar-label">You receive</span>
-          <span class="collar-value highlight" id="collarReceive">$50.00</span>
-        </div>
-        <div class="collar-row">
           <span class="collar-label">Service fee</span>
           <span class="collar-value" id="collarFee">$2.63 (5%)</span>
-        </div>
-        <div class="collar-row">
-          <span class="collar-label">Interest</span>
-          <span class="collar-zero">0%</span>
         </div>
 
         <button class="expandable-trigger" onclick="toggleExpand()">
@@ -1177,7 +1208,7 @@
           How does this work?
         </button>
         <div class="expandable-content" id="expandableContent">
-          A small portion of your Tesla shares are temporarily reserved as collateral. The protection range guarantees your shares won't be sold at a loss. Because your collateral is fully protected, we can lend at 0% interest. When you pay back, your shares are released immediately.
+          A small portion of your Tesla shares are temporarily reserved as collateral. The green zone on the graph shows your protection range. No matter where Tesla's price moves within that band over the next 30 days, your loan is fully covered. That's why we can lend at 0% interest. When you pay back, your shares are released immediately.
         </div>
       </div>
 
@@ -1268,18 +1299,25 @@
 
       <div class="card">
         <div class="card-title">Position</div>
-        <div class="collar-viz">
-          <div class="collar-bar-track">
-            <div class="collar-bar-fill"></div>
-            <div class="collar-marker floor"></div>
-            <div class="collar-marker cap"></div>
-            <div class="collar-dot"></div>
-          </div>
-          <div class="collar-labels">
-            <span class="floor-label">$213.75</span>
-            <span class="current-label">TSLA $225.00</span>
-            <span class="cap-label">$258.75</span>
-          </div>
+        <div class="collar-graph" style="margin:4px 0 0;">
+          <svg viewBox="0 0 340 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="30" y1="15" x2="30" y2="115" stroke="#2A2A2E" stroke-width="0.5"/>
+            <line x1="30" y1="115" x2="320" y2="115" stroke="#2A2A2E" stroke-width="0.5"/>
+            <rect x="30" y="28" width="290" height="68" rx="2" fill="#10B981" opacity="0.06"/>
+            <line x1="30" y1="28" x2="320" y2="28" stroke="#10B981" stroke-width="1.5" stroke-dasharray="6 3"/>
+            <line x1="30" y1="96" x2="320" y2="96" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="6 3"/>
+            <path d="M40 62 C60 62, 70 52, 85 48 S110 58, 130 54 S155 42, 170 46 S190 58, 205 54 S225 40, 240 44 S260 52, 275 48 S295 38, 310 42"
+              stroke="#10B981" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.7"/>
+            <path d="M40 62 C60 62, 70 52, 85 48 S110 58, 130 54 S155 42, 170 46 S190 58, 205 54 S225 40, 240 44 S260 52, 275 48 S295 38, 310 42 L310 115 L40 115 Z"
+              fill="url(#priceGrad2)" opacity="0.3"/>
+            <defs><linearGradient id="priceGrad2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10B981" stop-opacity="0.4"/><stop offset="100%" stop-color="#10B981" stop-opacity="0"/></linearGradient></defs>
+            <circle cx="40" cy="62" r="4" fill="#10B981"/>
+            <text x="26" y="32" text-anchor="end" fill="#10B981" font-size="8" font-family="Inter,sans-serif">Cap</text>
+            <text x="26" y="100" text-anchor="end" fill="#EF4444" font-size="8" font-family="Inter,sans-serif">Floor</text>
+            <text x="26" y="66" text-anchor="end" fill="#8E8E93" font-size="8" font-family="Inter,sans-serif">Now</text>
+            <text x="40" y="128" fill="#636366" font-size="8" font-family="Inter,sans-serif">Apr 3</text>
+            <text x="298" y="128" text-anchor="end" fill="#636366" font-size="8" font-family="Inter,sans-serif">May 3</text>
+          </svg>
         </div>
       </div>
 
