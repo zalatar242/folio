@@ -1182,25 +1182,39 @@
           </div>
         </div>
 
-        <!-- Key numbers in a compact grid -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+        <!-- Key numbers in a 3-column grid -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
           <div style="background:var(--bg-elevated); border-radius:8px; padding:12px;">
             <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:4px;">You receive</div>
-            <div style="font-size:20px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums;" id="collarReceive">$50.00</div>
+            <div style="font-size:18px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums;" id="collarReceive">$50.00</div>
           </div>
           <div style="background:var(--bg-elevated); border-radius:8px; padding:12px;">
-            <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:4px;">Interest rate</div>
-            <div style="font-size:20px; font-weight:700; color:var(--accent);">0%</div>
+            <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:4px;">Interest</div>
+            <div style="font-size:18px; font-weight:700; color:var(--accent);">0%</div>
+          </div>
+          <div style="background:var(--bg-elevated); border-radius:8px; padding:12px;">
+            <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:4px;">Fees</div>
+            <div style="font-size:18px; font-weight:700; color:var(--accent);">$0</div>
+          </div>
+        </div>
+
+        <!-- Repayment window picker -->
+        <div style="margin-bottom:12px;">
+          <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px;">Pay back within</div>
+          <div style="display:flex; gap:6px;" id="durationPicker">
+            <button onclick="pickDuration(7)" class="dur-btn" style="flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s;">7 days</button>
+            <button onclick="pickDuration(14)" class="dur-btn" style="flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s;">14 days</button>
+            <button onclick="pickDuration(30)" class="dur-btn active" style="flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--accent); background:var(--accent-muted); color:var(--accent); font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s;">30 days</button>
           </div>
         </div>
 
         <div class="collar-row">
           <span class="collar-label">Shares reserved</span>
-          <span class="collar-value" id="collarShares">0.234 TSLA ($52.63)</span>
+          <span class="collar-value" id="collarShares">0.222 TSLA</span>
         </div>
         <div class="collar-row">
-          <span class="collar-label">Service fee</span>
-          <span class="collar-value" id="collarFee">$2.63 (5%)</span>
+          <span class="collar-label">Collateral value</span>
+          <span class="collar-value" id="collarCollateral">$50.00</span>
         </div>
 
         <button class="expandable-trigger" onclick="toggleExpand()">
@@ -1208,7 +1222,7 @@
           How does this work?
         </button>
         <div class="expandable-content" id="expandableContent">
-          A small portion of your Tesla shares are temporarily reserved as collateral. The green zone on the graph shows your protection range. No matter where Tesla's price moves within that band over the next 30 days, your loan is fully covered. That's why we can lend at 0% interest. When you pay back, your shares are released immediately.
+          We reserve a small portion of your Tesla shares and wrap them in a zero-cost options collar (the put and call premiums cancel out). The green zone on the graph is your protection range. Pay back anytime within your chosen window, and your shares are released instantly. No fees, no interest, no catch.
         </div>
       </div>
 
@@ -1223,7 +1237,7 @@
         </div>
         <div class="confirm-label">Spent</div>
         <div class="confirm-amount">$50.00</div>
-        <div class="confirm-detail">0.234 shares of Tesla reserved<br>Protected between $213.75 - $258.75</div>
+        <div class="confirm-detail">0.222 shares of Tesla reserved<br>Zero-cost collar &middot; 0% interest &middot; 30 day term</div>
         <div class="confirm-buttons">
           <button class="btn-primary" onclick="showScreen('note-detail')">View Details</button>
           <button class="btn-secondary" onclick="showScreen('portfolio')">Done</button>
@@ -1244,7 +1258,7 @@
         </div>
         <div class="note-list-info">
           <div class="note-list-title">Spend Note #003</div>
-          <div class="note-list-meta">Apr 3, 2026 &middot; 0.234 shares of Tesla</div>
+          <div class="note-list-meta">Apr 3, 2026 &middot; 0.222 shares of Tesla</div>
         </div>
         <div class="note-list-right">
           <div class="note-list-value">$50.00</div>
@@ -1325,19 +1339,19 @@
         <div class="card-title">Details</div>
         <div class="detail-row">
           <span class="detail-label">Shares reserved</span>
-          <span class="detail-value">0.234 TSLA</span>
+          <span class="detail-value">0.222 TSLA</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Reserve value</span>
-          <span class="detail-value">$52.63</span>
+          <span class="detail-label">Collateral value</span>
+          <span class="detail-value">$50.00</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Amount received</span>
           <span class="detail-value" style="color: var(--accent);">$50.00</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Service fee</span>
-          <span class="detail-value">$2.63</span>
+          <span class="detail-label">Fees</span>
+          <span class="detail-value" style="color: var(--accent);">$0</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Interest</span>
@@ -1419,22 +1433,34 @@
     el.classList.toggle('open');
   }
 
+  let selectedDuration = 30;
+
+  function pickDuration(days) {
+    selectedDuration = days;
+    document.querySelectorAll('.dur-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.trim() === days + ' days');
+      btn.style.background = btn.classList.contains('active') ? 'var(--accent-muted)' : 'var(--bg-elevated)';
+      btn.style.borderColor = btn.classList.contains('active') ? 'var(--accent)' : 'var(--border)';
+      btn.style.color = btn.classList.contains('active') ? 'var(--accent)' : 'var(--text-secondary)';
+    });
+    updateCollar();
+  }
+
   function updateCollar() {
     const val = parseFloat(document.getElementById('spendAmount').value) || 0;
     const price = 225;
-    const haircut = 0.05;
-    const collateral = val / (1 - haircut);
-    const shares = collateral / price;
-    const fee = collateral - val;
+    const shares = val / price;
+    const collateral = shares * price;
 
     document.getElementById('collarShares').textContent =
-      shares.toFixed(3) + ' TSLA ($' + collateral.toFixed(2) + ')';
+      shares.toFixed(3) + ' TSLA';
+    document.getElementById('collarCollateral').textContent =
+      '$' + collateral.toFixed(2);
     document.getElementById('collarReceive').textContent =
       '$' + val.toFixed(2);
-    document.getElementById('collarFee').textContent =
-      '$' + fee.toFixed(2) + ' (5%)';
     document.getElementById('spendBtn').textContent =
       'Spend $' + val.toFixed(2);
+
   }
 </script>
 </body>

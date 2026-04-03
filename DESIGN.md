@@ -48,7 +48,7 @@ This: no minimum, 0% interest, no liquidation ever, instant.
 
 Codex cold read (independent, hadn't seen the conversation):
 
-- **Coolest version they haven't considered:** Not a card that borrows against stocks. A "personal prime broker in your pocket." Every purchase mints a "Spend Note" — a tiny tokenized structured product showing the asset slice, collar band, advance amount, and platform spread. Makes the invisible plumbing into a new asset primitive.
+- **Coolest version they haven't considered:** Not a card that borrows against stocks. A "personal prime broker in your pocket." Every purchase mints a "Spend Note" — a tiny tokenized structured product showing the asset slice, collar band, advance amount, and repayment term. Makes the invisible plumbing into a new asset primitive.
 - **The tell:** "What if they can hold their position and I just lend them 190 USD at 0%? Knowing that I can sell their position and make the $10 myself." — The excitement is about inventing a better financial machine, not wallets or AI.
 - **Weekend build priority:** One asset, one price feed, one stablecoin, one deterministic collar calculator. The narrowest possible magical moment. Do NOT build multi-asset, real brokerage, real options, or complicated AI chat UX.
 
@@ -153,41 +153,44 @@ Step 2: Set collar band (configurable, demo defaults)
         floor = stock_price * 0.95 = $213.75 (5% downside protection)
         cap   = stock_price * 1.15 = $258.75 (15% upside cap)
 
-Step 3: Apply haircut (platform's profit margin)
-        haircut = 0.05 (5% — configurable)
-        collateral_needed = spend_amount / (1 - haircut) = $52.63
-        shares = collateral_needed / stock_price = 0.234 shares
-        advance = $50 (what user gets)
-        platform_spread = collateral_needed - advance = $2.63
+Step 3: Zero-cost collar (no haircut, no platform fee)
+        The put and call premiums roughly cancel each other out.
+        Buying the put (downside protection) costs money.
+        Selling the call (capping upside) earns money.
+        Net cost to the user: ~$0.
+        shares_needed = spend_amount / stock_price = 0.222 shares
+        collateral_value = shares_needed * stock_price = $50.00
+        advance = $50 (what user gets = exactly the collateral value)
+        platform_fee = $0
 
 Step 4: Risk check (guarantees floor covers the advance)
-        min_collateral_value = shares * floor = 0.234 * $213.75 = $50.02
-        if advance > min_collateral_value: reject (too risky)
-        else: approve
-        (The haircut formula guarantees this passes:
-         shares * floor = (spend / (1-h)) * (1-f) where f=floor%
-         = ($50 / 0.95) * 0.95 = $50.00. With haircut=5% and
-         floor=5%, they exactly cancel. Use haircut > floor% for
-         safety margin. Demo default: haircut=5%, floor=4.5%,
-         so min_collateral = $50.25 > $50. Always passes.)
+        min_collateral_value = shares * floor = 0.222 * $213.75 = $47.45
+        The floor price gives a 5% buffer. If stock drops to floor,
+        the put option covers the difference back up to the advance.
+        This is the whole point of the collar: bounded risk.
 
-Step 5: Convert to HTS integer amounts
-        shares_hts = floor(shares * 1e6) = 234000  (MOCK-TSLA decimal 6)
+Step 5: User-chosen repayment duration
+        User picks 7, 14, or 30 days. This maps to the options expiry.
+        Shorter duration = tighter collar band = less upside given up.
+        If user repays before expiry: collar unwinds, shares return.
+        If user doesn't repay by expiry: shares are sold to cover.
+
+Step 6: Convert to HTS integer amounts
+        shares_hts = floor(shares * 1e6) = 222000  (MOCK-TSLA decimal 6)
         advance_hts = floor(advance * 1e6) = 50000000  (USDC-TEST decimal 6)
 
-Output: "Collaring 0.234 TSLA shares ($215.06-$258.75)"
-        "Lending: $50 USDC at 0%"
-        "Platform spread: $2.63 (locked in at collar time)"
-        "Max loss to platform: $0 (floor covers the advance)"
+Output: "Collaring 0.222 TSLA shares ($213.75-$258.75)"
+        "Lending: $50 USDC at 0% interest"
+        "Fees: $0 (zero-cost collar)"
+        "Repay within: 30 days"
 
-How the platform profits: The platform locks 0.234 shares ($52.63) but
-only lends $50 USDC. The $2.63 difference is held in the escrow as
-extra collateral. On repayment: user pays back $50 USDC, gets all
-shares back, platform keeps the $2.63 buffer (transferred as USDC
-from the escrow). On expiry/liquidation: agent sells 0.234 shares,
-keeps $50 (covering the advance) + any remaining value, returns
-excess to user. At floor price: collateral = $50.25, advance = $50,
-platform still breaks even.
+How the zero-cost collar works: The user's shares are the collateral.
+The put option (bought) protects against downside. The call option
+(sold) caps upside but pays for the put. Net premium: ~$0. The user
+pays no interest and no fees. On repayment: user pays back $50 USDC,
+gets all shares back, collar unwinds. On expiry without repayment:
+agent sells 0.222 shares to cover the $50 advance, returns any
+excess to user. The platform monetizes through volume, not spread.
 ```
 
 The floor protects the platform. The cap is what the user gives up. For small spends relative to portfolio, the cap barely matters.
@@ -201,7 +204,7 @@ The floor protects the platform. The cap is what the user gives up. For small sp
 "So I built this." Open app. Show portfolio: 44 shares of TSLA at $225 = $9,900. "These are real Tesla prices, live, right now."
 
 **[1:00-1:45] The Magic Moment**
-"I want to spend $50." Enter amount. Screen shows: collar band, shares used, 0% interest, platform spread. "The system just hedged 0.222 shares of my Tesla with a collar — bounded risk, bounded upside. Because the risk is bounded, it can lend me $50 at zero percent interest." Tap "Spend." Payment executes. Portfolio updates.
+"I want to spend $50." Enter amount. Screen shows: collar band, shares used, 0% interest, $0 fees, repayment duration (7/14/30 days). "The system just hedged 0.222 shares of my Tesla with a zero-cost collar — bounded risk, bounded upside. Because the risk is bounded, it can lend me $50 at zero percent interest with zero fees." Tap "Spend." Payment executes. Portfolio updates.
 
 **[1:45-2:15] The Spend Note**
 "Here's what just happened." Open the Spend Note receipt. Show: asset slice, collar band, advance amount, status. "Every payment is a micro-structured-product. Fully transparent. On-chain."
@@ -318,7 +321,7 @@ For the hackathon: use Pinata or nft.storage for IPFS pinning (free tier, instan
 
 1. **Hedera "No Solidity" + Chainlink CRE compatibility:** If CRE triggers HTS calls (not smart contracts), does it still qualify for "No Solidity"? Need to confirm with Hedera booth at hackathon.
 2. **Yahoo Finance API rate limits:** Free tier is fragile (scraping-based, routinely throttled). **Primary:** Twelve Data free tier (800 req/day, real-time). **Fallback:** Alpha Vantage (500 req/day). **Last resort:** hardcode a recent price and show "last updated" timestamp. Test all three before the hackathon. A price feed failure during the live demo is catastrophic.
-3. **Collar parameters for demo:** 5% floor / 15% cap chosen for visual clarity. Should be configurable but defaults matter for the pitch.
+3. **Collar parameters for demo:** 5% floor / 15% cap chosen for visual clarity. Zero-cost collar (put/call premiums cancel). User picks repayment duration (7/14/30 days) which maps to options expiry.
 4. **Repayment flow:** For the demo, do we need to show loan repayment? Or is the "spend" moment enough? Recommendation: skip repayment for MVP, mention it in pitch as "when your collar expires or you repay, your shares unlock."
 
 ## Success Criteria
@@ -347,8 +350,8 @@ No production distribution needed — this is a hackathon demo. Post-hackathon, 
 ## Reviewer Concerns (resolved)
 
 Two rounds of adversarial review. 11 issues caught, all fixed:
-- Collar spread math showed $0 profit (contradicted business model) → fixed with 5% haircut formula
-- Risk check example rejected its own demo trade (rounding) → fixed floor% < haircut% guarantee
+- Original collar spread math had 5% haircut for profit → replaced with zero-cost collar model (put/call premiums cancel, no fee to user)
+- Risk check simplified: floor price + put option covers the advance, no haircut math needed
 - Escrow 2-of-2 threshold key incompatible with Dynamic embedded wallets → simplified to agent-as-escrow
 - NFT metadata exceeded 100-byte HTS limit → IPFS for full JSON, CID on-chain
 - Token decimal handling missing → added HTS integer conversion step
