@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Folio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #0A0A0B;
+    --bg-surface: #141415;
+    --bg-elevated: #1C1C1E;
+    --bg-input: #1C1C1E;
+    --border: #2A2A2E;
+    --border-focus: #10B981;
+    --text-primary: #E8E8ED;
+    --text-secondary: #8E8E93;
+    --text-tertiary: #636366;
+    --accent: #10B981;
+    --accent-hover: #059669;
+    --accent-muted: rgba(16, 185, 129, 0.12);
+    --positive: #10B981;
+    --negative: #EF4444;
+    --collar-floor: #EF4444;
+    --collar-cap: #10B981;
+    --collar-band: rgba(16, 185, 129, 0.08);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ========= LAYOUT SHELL ========= */
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Desktop sidebar */
+  .sidebar {
+    display: none;
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .sidebar-logo {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    padding: 0 24px 32px;
+  }
+
+  .sidebar-logo span { color: var(--accent); }
+
+  .sidebar-nav { list-style: none; }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+  }
+
+  .sidebar-item:hover { color: var(--text-primary); background: var(--bg-elevated); }
+  .sidebar-item.active { color: var(--accent); background: var(--accent-muted); }
+  .sidebar-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  .sidebar-user {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .sidebar-user-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sidebar-user-name {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-user-status {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* Main content */
+  .main-content {
+    flex: 1;
+    min-width: 0;
+    max-width: 600px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+  }
+
+  /* Mobile top bar */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 12px;
+    position: sticky;
+    top: 0;
+    background: var(--bg-base);
+    z-index: 10;
+  }
+
+  .logo {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 6px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .user-avatar-sm {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 11px;
+    color: white;
+  }
+
+  /* ========= SCREENS ========= */
+  .screen {
+    display: none;
+    padding: 0 20px;
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========= PORTFOLIO ========= */
+  .portfolio-value { padding: 20px 0 4px; }
+
+  .portfolio-amount {
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portfolio-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+  }
+
+  .change-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+    padding: 4px 10px;
+    background: var(--accent-muted);
+    border-radius: var(--radius-full);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-top: 16px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+
+  /* Holdings */
+  .holding-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: default;
+  }
+
+  .holding-row:last-child { border-bottom: none; }
+
+  .holding-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .holding-icon.tsla { background: linear-gradient(135deg, #1a1a2e, #2a1a2e); color: #e44d4d; }
+  .holding-icon.aapl { background: linear-gradient(135deg, #1a1a2e, #1a2a2e); color: #8e8e93; }
+
+  .holding-info { flex: 1; min-width: 0; }
+
+  .holding-name { font-size: 15px; font-weight: 600; }
+
+  .holding-shares {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+
+  .holding-value { text-align: right; }
+
+  .holding-price {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .holding-change {
+    font-size: 13px;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .holding-change.positive { color: var(--positive); }
+  .holding-change.negative { color: var(--negative); }
+
+  /* CTA */
+  .cta-section { margin-top: 20px; }
+
+  .btn-primary {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .cta-subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+  }
+
+  /* Activity */
+  .activity-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .activity-row:last-child { border-bottom: none; }
+
+  .activity-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .activity-info { flex: 1; min-width: 0; }
+  .activity-title { font-size: 14px; font-weight: 500; }
+
+  .activity-time {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  .activity-amount {
+    font-size: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .status-pill.active {
+    background: var(--accent-muted);
+    color: var(--accent);
+  }
+
+  .status-pill.repaid {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3B82F6;
+  }
+
+  .activity-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .activity-right .status-pill { margin-top: 4px; }
+
+  /* ========= SPEND SCREEN ========= */
+  .spend-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0 24px;
+  }
+
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s;
+  }
+
+  .back-btn:hover { background: var(--bg-elevated); }
+
+  .screen-title {
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .amount-input-wrap {
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .amount-prefix {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    pointer-events: none;
+    transition: color 0.15s;
+  }
+
+  .amount-input-wrap:focus-within .amount-prefix { color: var(--text-secondary); }
+
+  .amount-input {
+    width: 100%;
+    padding: 20px 16px 20px 42px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .amount-input:focus { border-color: var(--border-focus); }
+  .amount-input::placeholder { color: var(--text-tertiary); }
+
+  .amount-available {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .amount-available strong {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .asset-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+  }
+
+  .asset-icon-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1a1a2e, #2a1a2e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    color: #e44d4d;
+    flex-shrink: 0;
+  }
+
+  .asset-name {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .asset-ticker {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+
+  .asset-price-sm {
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Collar preview */
+  .collar-preview {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .collar-preview-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+
+  .collar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+  }
+
+  .collar-label { color: var(--text-secondary); }
+
+  .collar-value {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .collar-value.highlight {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .collar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  .collar-zero {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  /* Collar viz bar */
+  .collar-viz {
+    margin: 20px 0 8px;
+    position: relative;
+  }
+
+  .collar-bar-track {
+    height: 6px;
+    background: var(--bg-elevated);
+    border-radius: 3px;
+    position: relative;
+    overflow: visible;
+  }
+
+  .collar-bar-fill {
+    position: absolute;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(239,68,68,0.08), var(--collar-band), rgba(16,185,129,0.08));
+    border-radius: 3px;
+    left: 10%;
+    right: 10%;
+  }
+
+  .collar-marker {
+    position: absolute;
+    top: -5px;
+    width: 2px;
+    height: 16px;
+    border-radius: 1px;
+  }
+
+  .collar-marker.floor { left: 10%; background: var(--collar-floor); }
+  .collar-marker.cap { right: 10%; background: var(--collar-cap); }
+
+  .collar-dot {
+    position: absolute;
+    top: -5px;
+    left: 35%;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+    50% { transform: scale(1.15); box-shadow: 0 0 18px rgba(16, 185, 129, 0.6); }
+  }
+
+  .collar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .collar-labels .floor-label { color: var(--collar-floor); font-weight: 500; }
+  .collar-labels .current-label { color: var(--accent); font-weight: 500; }
+  .collar-labels .cap-label { color: var(--collar-cap); font-weight: 500; }
+
+  /* Expandable */
+  .expandable-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .expandable-trigger:hover { color: var(--text-primary); }
+
+  .expandable-content {
+    display: none;
+    margin-top: 12px;
+    padding: 14px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .expandable-content.open { display: block; }
+
+  /* ========= CONFIRMATION ========= */
+  .confirm-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 0 20px;
+  }
+
+  .confirm-check {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--accent-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes scaleIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+  }
+
+  .confirm-check svg { width: 36px; height: 36px; color: var(--accent); }
+
+  .confirm-label {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .confirm-amount {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  .confirm-detail {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .confirm-buttons {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-secondary:hover { background: var(--bg-elevated); }
+
+  /* ========= NOTES LIST ========= */
+  .section-header {
+    padding: 16px 0 4px;
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .section-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    margin-bottom: 16px;
+  }
+
+  .note-list-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .note-list-item:hover { background: var(--bg-elevated); }
+  .note-list-item:active { transform: scale(0.995); }
+
+  .note-list-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--accent-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .note-list-info { flex: 1; min-width: 0; }
+
+  .note-list-title { font-size: 15px; font-weight: 500; }
+
+  .note-list-meta {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  .note-list-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .note-list-value {
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .note-list-status { margin-top: 4px; }
+
+  /* ========= SPEND NOTE DETAIL ========= */
+  .note-hero {
+    text-align: center;
+    padding: 20px 0 24px;
+  }
+
+  .note-hero .status-pill { margin-bottom: 12px; }
+
+  .note-amount {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .note-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .note-date {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 8px;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: var(--text-secondary); }
+
+  .detail-value {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .detail-link {
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .detail-link:hover { text-decoration: underline; }
+
+  .btn-disabled {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--bg-elevated);
+    color: var(--text-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: not-allowed;
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  /* ========= BOTTOM NAV (mobile) ========= */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    padding: 6px 0 env(safe-area-inset-bottom, 6px);
+    z-index: 100;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(20, 20, 21, 0.92);
+  }
+
+  .nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 500;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nav-tab.active { color: var(--accent); }
+  .nav-tab:hover { color: var(--text-secondary); }
+  .nav-tab svg { width: 22px; height: 22px; }
+
+  /* ========= DESKTOP RESPONSIVE ========= */
+  @media (min-width: 768px) {
+    .sidebar { display: flex; flex-direction: column; position: relative; }
+    .top-bar { display: none; }
+    .bottom-nav { display: none; }
+
+    .main-content {
+      max-width: 560px;
+      padding: 32px 32px 48px;
+    }
+
+    .screen { padding: 0; }
+
+    .portfolio-amount { font-size: 52px; }
+
+    .card { padding: 20px; }
+
+    .btn-primary { padding: 16px; font-size: 15px; border-radius: var(--radius-md); }
+    .btn-primary:hover { transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .holding-row { padding: 14px 0; }
+
+    .note-list-item { padding: 18px 20px; }
+
+    .amount-input { font-size: 40px; padding: 24px 16px 24px 48px; }
+    .amount-prefix { font-size: 40px; left: 16px; }
+
+    .collar-preview { padding: 24px; }
+
+    .confirm-screen { min-height: 50vh; }
+  }
+
+  /* Large desktop */
+  @media (min-width: 1024px) {
+    .sidebar { width: 260px; }
+
+    .main-content {
+      max-width: 600px;
+      padding: 40px 40px 48px;
+    }
+  }
+
+  /* Small mobile */
+  @media (max-width: 380px) {
+    .portfolio-amount { font-size: 38px; }
+    .amount-input { font-size: 32px; }
+    .amount-prefix { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- Desktop Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">folio<span>.</span></div>
+    <ul class="sidebar-nav">
+      <li>
+        <button class="sidebar-item active" id="side-portfolio" onclick="showScreen('portfolio')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Portfolio
+        </button>
+      </li>
+      <li>
+        <button class="sidebar-item" id="side-spend" onclick="showScreen('spend')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.38-1.34-2.5-3-2.5s-3 1.12-3 2.5 1.34 2.5 3 2.5 3 1.12 3 2.5-1.34 2.5-3 2.5"/></svg>
+          Spend
+        </button>
+      </li>
+      <li>
+        <button class="sidebar-item" id="side-notes" onclick="showScreen('notes')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Spend Notes
+        </button>
+      </li>
+    </ul>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">S</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">Sree</div>
+        <div class="sidebar-user-status"><div class="status-dot"></div> Connected</div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <!-- Mobile Top Bar -->
+    <div class="top-bar">
+      <div class="logo">folio<span>.</span></div>
+      <div class="user-badge">
+        <div class="user-avatar-sm">S</div>
+        Sree
+      </div>
+    </div>
+
+    <!-- ===== PORTFOLIO ===== -->
+    <div class="screen active" id="screen-portfolio">
+      <div class="portfolio-value">
+        <div class="portfolio-amount">$9,900.00</div>
+        <div class="portfolio-label">Portfolio Value</div>
+        <div class="change-badge">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2L10 7H2L6 2Z" fill="currentColor"/></svg>
+          +$125.00 (+1.28%) today
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Holdings</div>
+        <div class="holding-row">
+          <div class="holding-icon tsla">T</div>
+          <div class="holding-info">
+            <div class="holding-name">Tesla</div>
+            <div class="holding-shares">44 shares</div>
+          </div>
+          <div class="holding-value">
+            <div class="holding-price">$9,900.00</div>
+            <div class="holding-change positive">+1.28%</div>
+          </div>
+        </div>
+        <div class="holding-row">
+          <div class="holding-icon aapl">A</div>
+          <div class="holding-info">
+            <div class="holding-name">Apple</div>
+            <div class="holding-shares">0 shares</div>
+          </div>
+          <div class="holding-value">
+            <div class="holding-price">$0.00</div>
+            <div class="holding-change" style="color: var(--text-tertiary)">--</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-section">
+        <button class="btn-primary" onclick="showScreen('spend')">Spend from Portfolio</button>
+        <div class="cta-subtitle">0% interest . no liquidation . instant</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div class="activity-row" onclick="showScreen('note-detail')">
+          <div class="activity-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          </div>
+          <div class="activity-info">
+            <div class="activity-title">Spend Note #003</div>
+            <div class="activity-time">2 min ago</div>
+          </div>
+          <div class="activity-right">
+            <div class="activity-amount">-$50.00</div>
+            <span class="status-pill active">Active</span>
+          </div>
+        </div>
+        <div class="activity-row" onclick="showScreen('note-detail')">
+          <div class="activity-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          </div>
+          <div class="activity-info">
+            <div class="activity-title">Spend Note #002</div>
+            <div class="activity-time">1 hour ago</div>
+          </div>
+          <div class="activity-right">
+            <div class="activity-amount">-$25.00</div>
+            <span class="status-pill active">Active</span>
+          </div>
+        </div>
+        <div class="activity-row">
+          <div class="activity-icon-wrap">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="activity-info">
+            <div class="activity-title">Spend Note #001</div>
+            <div class="activity-time">Yesterday</div>
+          </div>
+          <div class="activity-right">
+            <div class="activity-amount">-$100.00</div>
+            <span class="status-pill repaid">Repaid</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SPEND ===== -->
+    <div class="screen" id="screen-spend">
+      <div class="spend-header">
+        <button class="back-btn" onclick="showScreen('portfolio')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="screen-title">Spend</div>
+      </div>
+
+      <div class="amount-input-wrap">
+        <div class="amount-prefix">$</div>
+        <input type="text" class="amount-input" placeholder="0" value="50" id="spendAmount" inputmode="decimal" oninput="updateCollar()">
+      </div>
+      <div class="amount-available">Available: up to <strong>$472.50</strong> from Tesla</div>
+
+      <div class="asset-selector">
+        <div class="asset-icon-sm">T</div>
+        <div>
+          <div class="asset-name">Tesla</div>
+          <div class="asset-ticker">TSLA</div>
+        </div>
+        <div class="asset-price-sm">$225.00</div>
+      </div>
+
+      <div class="collar-preview" id="collarPreview">
+        <div class="collar-preview-title">Protection Details</div>
+
+        <div class="collar-viz">
+          <div class="collar-bar-track">
+            <div class="collar-bar-fill"></div>
+            <div class="collar-marker floor"></div>
+            <div class="collar-marker cap"></div>
+            <div class="collar-dot"></div>
+          </div>
+          <div class="collar-labels">
+            <span class="floor-label">$213.75</span>
+            <span class="current-label">$225.00</span>
+            <span class="cap-label">$258.75</span>
+          </div>
+        </div>
+
+        <div class="collar-row">
+          <span class="collar-label">Shares reserved</span>
+          <span class="collar-value" id="collarShares">0.234 TSLA ($52.63)</span>
+        </div>
+        <div class="collar-row">
+          <span class="collar-label">Protection range</span>
+          <span class="collar-value">$213.75 - $258.75</span>
+        </div>
+        <div class="collar-divider"></div>
+        <div class="collar-row">
+          <span class="collar-label">You receive</span>
+          <span class="collar-value highlight" id="collarReceive">$50.00</span>
+        </div>
+        <div class="collar-row">
+          <span class="collar-label">Service fee</span>
+          <span class="collar-value" id="collarFee">$2.63 (5%)</span>
+        </div>
+        <div class="collar-row">
+          <span class="collar-label">Interest</span>
+          <span class="collar-zero">0%</span>
+        </div>
+
+        <button class="expandable-trigger" onclick="toggleExpand()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M7 4.5V9.5M4.5 7H9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          How does this work?
+        </button>
+        <div class="expandable-content" id="expandableContent">
+          A small portion of your Tesla shares are temporarily reserved as collateral. The protection range guarantees your shares won't be sold at a loss. Because your collateral is fully protected, we can lend at 0% interest. When you pay back, your shares are released immediately.
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="showScreen('confirm')" id="spendBtn">Spend $50.00</button>
+    </div>
+
+    <!-- ===== CONFIRMATION ===== -->
+    <div class="screen" id="screen-confirm">
+      <div class="confirm-screen">
+        <div class="confirm-check">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="confirm-label">Spent</div>
+        <div class="confirm-amount">$50.00</div>
+        <div class="confirm-detail">0.234 shares of Tesla reserved<br>Protected between $213.75 - $258.75</div>
+        <div class="confirm-buttons">
+          <button class="btn-primary" onclick="showScreen('note-detail')">View Details</button>
+          <button class="btn-secondary" onclick="showScreen('portfolio')">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== NOTES LIST ===== -->
+    <div class="screen" id="screen-notes">
+      <div class="section-header">
+        <div class="section-title">Spend Notes</div>
+        <div class="section-subtitle">Your spending history and active positions.</div>
+      </div>
+
+      <div class="note-list-item" onclick="showScreen('note-detail')">
+        <div class="note-list-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <div class="note-list-info">
+          <div class="note-list-title">Spend Note #003</div>
+          <div class="note-list-meta">Apr 3, 2026 &middot; 0.234 shares of Tesla</div>
+        </div>
+        <div class="note-list-right">
+          <div class="note-list-value">$50.00</div>
+          <div class="note-list-status"><span class="status-pill active">Active</span></div>
+        </div>
+      </div>
+
+      <div class="note-list-item">
+        <div class="note-list-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <div class="note-list-info">
+          <div class="note-list-title">Spend Note #002</div>
+          <div class="note-list-meta">Apr 3, 2026 &middot; 0.117 shares of Tesla</div>
+        </div>
+        <div class="note-list-right">
+          <div class="note-list-value">$25.00</div>
+          <div class="note-list-status"><span class="status-pill active">Active</span></div>
+        </div>
+      </div>
+
+      <div class="note-list-item">
+        <div class="note-list-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="note-list-info">
+          <div class="note-list-title">Spend Note #001</div>
+          <div class="note-list-meta">Apr 2, 2026 &middot; 0.468 shares of Tesla</div>
+        </div>
+        <div class="note-list-right">
+          <div class="note-list-value">$100.00</div>
+          <div class="note-list-status"><span class="status-pill repaid">Repaid</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SPEND NOTE DETAIL ===== -->
+    <div class="screen" id="screen-note-detail">
+      <div class="spend-header">
+        <button class="back-btn" onclick="showScreen('notes')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <div class="screen-title">Spend Note #003</div>
+      </div>
+
+      <div class="note-hero">
+        <span class="status-pill active">Active</span>
+        <div class="note-amount">$50.00</div>
+        <div class="note-subtitle">Advance against Tesla</div>
+        <div class="note-date">Apr 3, 2026 at 3:42 PM</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Position</div>
+        <div class="collar-viz">
+          <div class="collar-bar-track">
+            <div class="collar-bar-fill"></div>
+            <div class="collar-marker floor"></div>
+            <div class="collar-marker cap"></div>
+            <div class="collar-dot"></div>
+          </div>
+          <div class="collar-labels">
+            <span class="floor-label">$213.75</span>
+            <span class="current-label">TSLA $225.00</span>
+            <span class="cap-label">$258.75</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Details</div>
+        <div class="detail-row">
+          <span class="detail-label">Shares reserved</span>
+          <span class="detail-value">0.234 TSLA</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Reserve value</span>
+          <span class="detail-value">$52.63</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Amount received</span>
+          <span class="detail-value" style="color: var(--accent);">$50.00</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Service fee</span>
+          <span class="detail-value">$2.63</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Interest</span>
+          <span class="detail-value" style="color: var(--accent); font-weight: 700;">0%</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Expires</span>
+          <span class="detail-value">May 3, 2026</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Receipt</div>
+        <div class="detail-row">
+          <span class="detail-label">Receipt ID</span>
+          <span class="detail-value"><a class="detail-link" href="#">5234821</a></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Transaction</span>
+          <span class="detail-value"><a class="detail-link" href="#">View on explorer</a></span>
+        </div>
+      </div>
+
+      <div class="btn-disabled">Repay $50.00 (Coming Soon)</div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" id="nav-portfolio" onclick="showScreen('portfolio')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Portfolio
+  </button>
+  <button class="nav-tab" id="nav-spend" onclick="showScreen('spend')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.38-1.34-2.5-3-2.5s-3 1.12-3 2.5 1.34 2.5 3 2.5 3 1.12 3 2.5-1.34 2.5-3 2.5"/></svg>
+    Spend
+  </button>
+  <button class="nav-tab" id="nav-notes" onclick="showScreen('notes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Notes
+  </button>
+</nav>
+
+<script>
+  const screens = ['portfolio', 'spend', 'confirm', 'notes', 'note-detail'];
+
+  const navMap = {
+    'portfolio': 'portfolio',
+    'spend': 'spend',
+    'confirm': 'spend',
+    'notes': 'notes',
+    'note-detail': 'notes'
+  };
+
+  function showScreen(name) {
+    // Hide all screens
+    screens.forEach(s => {
+      document.getElementById('screen-' + s).classList.remove('active');
+    });
+    document.getElementById('screen-' + name).classList.add('active');
+
+    // Update mobile bottom nav
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    const mobileNav = document.getElementById('nav-' + navMap[name]);
+    if (mobileNav) mobileNav.classList.add('active');
+
+    // Update desktop sidebar
+    document.querySelectorAll('.sidebar-item').forEach(t => t.classList.remove('active'));
+    const sideNav = document.getElementById('side-' + navMap[name]);
+    if (sideNav) sideNav.classList.add('active');
+
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+
+  function toggleExpand() {
+    const el = document.getElementById('expandableContent');
+    el.classList.toggle('open');
+  }
+
+  function updateCollar() {
+    const val = parseFloat(document.getElementById('spendAmount').value) || 0;
+    const price = 225;
+    const haircut = 0.05;
+    const collateral = val / (1 - haircut);
+    const shares = collateral / price;
+    const fee = collateral - val;
+
+    document.getElementById('collarShares').textContent =
+      shares.toFixed(3) + ' TSLA ($' + collateral.toFixed(2) + ')';
+    document.getElementById('collarReceive').textContent =
+      '$' + val.toFixed(2);
+    document.getElementById('collarFee').textContent =
+      '$' + fee.toFixed(2) + ' (5%)';
+    document.getElementById('spendBtn').textContent =
+      'Spend $' + val.toFixed(2);
+  }
+</script>
+</body>
+</html>
