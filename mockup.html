@@ -1094,7 +1094,28 @@
         <button class="back-btn" onclick="showScreen('portfolio')">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         </button>
-        <div class="screen-title">Spend</div>
+        <div class="screen-title">Send Payment</div>
+      </div>
+
+      <!-- Recipient section -->
+      <div id="recipientEmpty" style="text-align:center; padding:20px 0 16px;">
+        <button onclick="selectRecipient()" style="width:72px; height:72px; border-radius:50%; background:var(--bg-elevated); border:2px dashed var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; transition:all 0.15s;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="12" y1="7" x2="12" y2="17"/></svg>
+        </button>
+        <div style="font-size:14px; color:var(--text-secondary);">Scan QR or tap to choose recipient</div>
+      </div>
+
+      <div id="recipientSelected" style="display:none; padding:12px 16px; background:var(--bg-surface); border:1px solid var(--border); border-radius:12px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, #6366F1, #8B5CF6); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:16px; color:white;">A</div>
+          <div style="flex:1;">
+            <div style="font-size:15px; font-weight:600;">Alex Chen</div>
+            <div style="font-size:12px; color:var(--text-tertiary);">@alexchen</div>
+          </div>
+          <button onclick="clearRecipient()" style="background:none; border:none; cursor:pointer; padding:4px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
       </div>
 
       <div class="amount-input-wrap">
@@ -1103,37 +1124,41 @@
       </div>
       <div class="amount-available">Available: up to <strong>$472.50</strong> from Tesla</div>
 
+      <!-- Paying from (asset selector) -->
       <div class="asset-selector">
         <div class="asset-icon-sm">T</div>
         <div>
           <div class="asset-name">Tesla</div>
-          <div class="asset-ticker">TSLA</div>
+          <div class="asset-ticker">Paying from</div>
         </div>
         <div class="asset-price-sm">$225.00</div>
       </div>
 
+      <!-- Klarna-style loan disclosure -->
       <div class="collar-preview" id="collarPreview">
-        <div class="collar-preview-title">Loan Terms</div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <div class="collar-preview-title" style="margin:0;">Pay later with your portfolio</div>
+        </div>
 
-        <!-- Key numbers in a 3-column grid -->
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
-          <div style="background:var(--bg-elevated); border-radius:8px; padding:12px;">
-            <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:4px;">You receive</div>
-            <div style="font-size:18px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums;" id="collarReceive">$50.00</div>
+          <div style="background:var(--bg-elevated); border-radius:8px; padding:10px;">
+            <div style="font-size:10px; color:var(--text-tertiary); margin-bottom:2px;">They get</div>
+            <div style="font-size:16px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums;" id="collarReceive">$50.00</div>
           </div>
-          <div style="background:var(--bg-elevated); border-radius:8px; padding:12px;">
-            <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:4px;">Interest</div>
-            <div style="font-size:18px; font-weight:700; color:var(--accent);">0%</div>
+          <div style="background:var(--bg-elevated); border-radius:8px; padding:10px;">
+            <div style="font-size:10px; color:var(--text-tertiary); margin-bottom:2px;">Interest</div>
+            <div style="font-size:16px; font-weight:700; color:var(--accent);">0%</div>
           </div>
-          <div style="background:var(--bg-elevated); border-radius:8px; padding:12px;">
-            <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:4px;">Fees</div>
-            <div style="font-size:18px; font-weight:700; color:var(--accent);">$0</div>
+          <div style="background:var(--bg-elevated); border-radius:8px; padding:10px;">
+            <div style="font-size:10px; color:var(--text-tertiary); margin-bottom:2px;">Fees</div>
+            <div style="font-size:16px; font-weight:700; color:var(--accent);">$0</div>
           </div>
         </div>
 
         <!-- Repayment window picker -->
         <div style="margin-bottom:12px;">
-          <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px;">Pay back within</div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-bottom:8px;">Repay within</div>
           <div style="display:flex; gap:6px;" id="durationPicker">
             <button onclick="pickDuration(7)" class="dur-btn" style="flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s;">7 days</button>
             <button onclick="pickDuration(14)" class="dur-btn" style="flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s;">14 days</button>
@@ -1142,18 +1167,13 @@
         </div>
 
         <div class="collar-row">
-          <span class="collar-label">Shares held as collateral</span>
-          <span class="collar-value" id="collarShares">0.222 TSLA</span>
-        </div>
-        <div class="collar-row">
-          <span class="collar-label">Collateral value</span>
-          <span class="collar-value" id="collarCollateral">$50.00</span>
+          <span class="collar-label">Collateral</span>
+          <span class="collar-value"><span id="collarShares">0.222 TSLA</span> (<span id="collarCollateral">$50.00</span>)</span>
         </div>
 
-        <!-- Expiry warning -->
-        <div style="margin-top:12px; padding:10px 12px; background:rgba(234,179,8,0.08); border:1px solid rgba(234,179,8,0.2); border-radius:8px; display:flex; align-items:flex-start; gap:8px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EAB308" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          <div style="font-size:12px; color:#EAB308; line-height:1.4;">If not repaid by <strong id="expiryDate">May 3, 2026</strong>, your shares will be sold to settle the balance.</div>
+        <!-- Expiry note (compact) -->
+        <div style="margin-top:8px; font-size:11px; color:var(--text-tertiary); line-height:1.4;">
+          Repay <strong style="color:var(--text-secondary);" id="expiryDate">by May 3</strong> to unlock shares. If not repaid, shares are sold to settle.
         </div>
 
         <button class="expandable-trigger" onclick="toggleExpand()">
@@ -1203,11 +1223,11 @@
               <span><span class="legend-dot" style="background:#EF4444"></span> Floor</span>
             </div>
           </div>
-          This is a 0% interest loan backed by your Tesla shares. We hold a small portion as collateral and protect it with a zero-cost options collar (the green zone above). Repay anytime before the due date and your shares are released instantly. If you don't repay, the shares are sold to cover the balance. No fees, no interest, no surprises.
+          This is a 0% interest loan backed by your Tesla shares. We hold a small portion as collateral and protect it with a zero-cost options collar (the green zone above). The recipient gets paid instantly. Repay anytime before the due date and your shares are released. If you don't repay, the shares are sold to cover the balance.
         </div>
       </div>
 
-      <button class="btn-primary" onclick="showScreen('confirm')" id="spendBtn">Spend $50.00</button>
+      <button class="btn-primary" onclick="showScreen('confirm')" id="spendBtn">Send $50.00</button>
     </div>
 
     <!-- ===== CONFIRMATION ===== -->
@@ -1216,9 +1236,9 @@
         <div class="confirm-check">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <div class="confirm-label">$50.00 Loan Issued</div>
-        <div class="confirm-amount" style="font-size:16px; font-weight:500; color:var(--text-secondary); margin-top:4px;">0% interest &middot; $0 fees &middot; 30 day term</div>
-        <div class="confirm-detail" style="margin-top:16px;">0.222 shares of Tesla held as collateral<br>Repay anytime to get your shares back</div>
+        <div class="confirm-label">Sent to Alex Chen</div>
+        <div class="confirm-amount">$50.00</div>
+        <div class="confirm-detail" style="margin-top:8px;">0% interest &middot; $0 fees &middot; Repay within 30 days<br><span style="color:var(--text-tertiary);">0.222 TSLA held as collateral</span></div>
         <div class="confirm-buttons">
           <button class="btn-primary" onclick="showScreen('note-detail')">View Loan Details</button>
           <button class="btn-secondary" onclick="showScreen('portfolio')">Done</button>
@@ -1288,7 +1308,7 @@
       <div class="note-hero">
         <span class="status-pill active">Active Loan</span>
         <div class="note-amount">$50.00</div>
-        <div class="note-subtitle">Repay to get your 0.222 TSLA back</div>
+        <div class="note-subtitle">Sent to Alex Chen</div>
         <div class="note-date">Apr 3, 2026 at 3:42 PM</div>
       </div>
 
@@ -1417,6 +1437,20 @@
     el.classList.toggle('open');
   }
 
+  // Recipient selection (demo: instantly picks Alex Chen)
+  function selectRecipient() {
+    document.getElementById('recipientEmpty').style.display = 'none';
+    document.getElementById('recipientSelected').style.display = 'block';
+  }
+
+  function clearRecipient() {
+    document.getElementById('recipientEmpty').style.display = 'block';
+    document.getElementById('recipientSelected').style.display = 'none';
+  }
+
+  // Auto-select recipient on screen load for demo flow
+  selectRecipient();
+
   let selectedDuration = 30;
 
   function pickDuration(days) {
@@ -1443,7 +1477,7 @@
     document.getElementById('collarReceive').textContent =
       '$' + val.toFixed(2);
     document.getElementById('spendBtn').textContent =
-      'Spend $' + val.toFixed(2);
+      'Send $' + val.toFixed(2);
 
   }
 </script>
