@@ -6,46 +6,74 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { id: 'portfolio', label: 'Portfolio', icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z' },
-  { id: 'spend', label: 'Send', icon: 'M12 2a10 10 0 110 20 10 10 0 010-20zm0 4v12m3-8.5c0-1.38-1.34-2.5-3-2.5s-3 1.12-3 2.5 1.34 2.5 3 2.5 3 1.12 3 2.5-1.34 2.5-3 2.5' },
-  { id: 'notes', label: 'Notes', icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8' },
+  {
+    id: 'portfolio', label: 'Portfolio',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
+    id: 'spend', label: 'Send',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+      </svg>
+    ),
+  },
+  {
+    id: 'notes', label: 'Notes',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+    ),
+  },
 ];
 
 export default function Sidebar({ activeTab, onNavigate }: SidebarProps) {
   return (
-    <aside className="hidden md:flex flex-col w-[220px] border-r px-4 py-8 gap-1"
+    <aside className="hidden md:flex flex-col w-[240px] border-r px-5 py-8 gap-1"
       style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
-      <div className="flex items-center gap-2 mb-8 px-3">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
-          style={{ background: 'var(--accent)', color: '#000' }}>F</div>
-        <span className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Folio</span>
+      {/* Logo */}
+      <div className="flex items-center gap-3 mb-10 px-3">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold"
+          style={{ background: 'var(--accent)', color: '#000', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}>F</div>
+        <span className="text-[17px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>Folio</span>
       </div>
 
-      {navItems.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => onNavigate(item.id)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-          style={{
-            background: activeTab === item.id ? 'var(--accent-muted)' : 'transparent',
-            color: activeTab === item.id ? 'var(--accent)' : 'var(--text-secondary)',
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d={item.icon} />
-          </svg>
-          {item.label}
-        </button>
-      ))}
+      {/* Nav */}
+      <div className="flex flex-col gap-1">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onNavigate(item.id)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all cursor-pointer ${
+              activeTab === item.id ? 'nav-active' : ''
+            }`}
+            style={{
+              background: activeTab === item.id ? 'var(--accent-muted)' : 'transparent',
+              color: activeTab === item.id ? 'var(--accent)' : 'var(--text-secondary)',
+            }}
+          >
+            {item.icon}
+            {item.label}
+          </button>
+        ))}
+      </div>
 
+      {/* User */}
       <div className="mt-auto px-3">
-        <div className="flex items-center gap-3 py-2">
+        <div className="flex items-center gap-3 p-2 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
           <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold"
-            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>
+            style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)', color: '#fff' }}>
             S
           </div>
           <div>
-            <div className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Demo User</div>
+            <div className="text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>Demo User</div>
             <div className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>Testnet</div>
           </div>
         </div>

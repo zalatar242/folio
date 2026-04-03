@@ -35,7 +35,7 @@ export default function SpendFlow({ prices, onBack, onComplete }: SpendFlowProps
           amount: val,
           durationMonths,
           recipientName: 'Alex Chen',
-          userAccountId: 'demo-user', // In production: Dynamic wallet
+          userAccountId: 'demo-user',
         }),
       });
 
@@ -53,7 +53,6 @@ export default function SpendFlow({ prices, onBack, onComplete }: SpendFlowProps
         });
       }
     } catch {
-      // For demo: complete anyway with mock data
       onComplete({
         amount: val,
         shares: collar.shares,
@@ -72,8 +71,9 @@ export default function SpendFlow({ prices, onBack, onComplete }: SpendFlowProps
     <div>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={onBack} className="p-1 cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <button onClick={onBack} className="p-2 rounded-lg cursor-pointer transition-colors"
+          style={{ color: 'var(--text-secondary)', background: 'var(--bg-elevated)' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
@@ -82,31 +82,30 @@ export default function SpendFlow({ prices, onBack, onComplete }: SpendFlowProps
 
       {/* Recipient */}
       {!recipientSelected ? (
-        <div className="text-center py-5 mb-4">
+        <div className="text-center py-6 mb-5">
           <button
             onClick={() => setRecipientSelected(true)}
-            className="w-[72px] h-[72px] rounded-full flex items-center justify-center mx-auto mb-3 cursor-pointer"
-            style={{ background: 'var(--bg-elevated)', border: '2px dashed var(--border)' }}
+            className="w-[72px] h-[72px] rounded-full flex items-center justify-center mx-auto mb-3 cursor-pointer transition-all"
+            style={{ background: 'var(--bg-elevated)', border: '2px dashed rgba(255,255,255,0.1)' }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <line x1="7" y1="12" x2="17" y2="12" />
-              <line x1="12" y1="7" x2="12" y2="17" />
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="1.5" strokeLinecap="round">
+              <circle cx="12" cy="8" r="4" /><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
             </svg>
           </button>
           <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Scan QR or tap to choose recipient</div>
         </div>
       ) : (
-        <div className="flex items-center gap-3 p-3 rounded-xl mb-4"
-          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-base font-semibold text-white"
+        <div className="card flex items-center gap-3 p-3.5 mb-5">
+          <div className="w-11 h-11 rounded-full flex items-center justify-center text-base font-semibold text-white"
             style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>A</div>
           <div className="flex-1">
             <div className="text-[15px] font-semibold">Alex Chen</div>
             <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>@alexchen</div>
           </div>
-          <button onClick={() => setRecipientSelected(false)} className="p-1 cursor-pointer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2">
+          <button onClick={() => setRecipientSelected(false)}
+            className="p-1.5 rounded-lg cursor-pointer transition-colors"
+            style={{ color: 'var(--text-tertiary)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
@@ -121,89 +120,96 @@ export default function SpendFlow({ prices, onBack, onComplete }: SpendFlowProps
           value={amount}
           onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
           className="text-5xl font-bold text-center bg-transparent border-none outline-none w-48"
-          style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}
+          style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', caretColor: 'var(--accent)' }}
           inputMode="decimal"
         />
       </div>
-      <div className="text-center text-xs mb-5" style={{ color: 'var(--text-tertiary)' }}>
+      <div className="text-center text-xs mb-6" style={{ color: 'var(--text-tertiary)' }}>
         Available: up to <strong style={{ color: 'var(--text-secondary)' }}>
-          ${maxSpend.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+          ${maxSpend.toLocaleString('en-US', { maximumFractionDigits: 0 })}
         </strong> from Tesla
       </div>
 
       {/* Paying From */}
-      <div className="flex items-center gap-3 p-3 rounded-xl mb-4"
-        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-          style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }}>T</div>
+      <div className="card flex items-center gap-3 p-3.5 mb-4">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white"
+          style={{ background: 'linear-gradient(135deg, #E31937, #B91C3A)' }}>T</div>
         <div className="flex-1">
           <div className="text-sm font-semibold">Tesla</div>
-          <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Paying from</div>
+          <div className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>Paying from</div>
         </div>
         <div className="text-sm font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>
           ${tslaPrice.toFixed(2)}
         </div>
       </div>
 
-      {/* Loan Disclosure (Klarna-style) */}
-      <div className="p-4 rounded-xl mb-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-2 mb-3">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
-          </svg>
+      {/* Loan Disclosure */}
+      <div className="card p-5 mb-5">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: 'var(--accent-muted)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+            </svg>
+          </div>
           <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Pay later with your portfolio</div>
         </div>
 
         {/* Stat Grid */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          <div className="p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
-            <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>They get</div>
-            <div className="text-base font-bold" style={{ color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>
-              {formatUsd(val)}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {[
+            { label: 'They get', value: formatUsd(val), color: 'var(--accent)' },
+            { label: 'Interest', value: '0%', color: 'var(--accent)' },
+            { label: 'Fees', value: '$0', color: 'var(--accent)' },
+          ].map((stat) => (
+            <div key={stat.label} className="p-3 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
+              <div className="text-[10px] mb-1 uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                {stat.label}
+              </div>
+              <div className="text-[17px] font-bold" style={{ color: stat.color, fontVariantNumeric: 'tabular-nums' }}>
+                {stat.value}
+              </div>
             </div>
-          </div>
-          <div className="p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
-            <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>Interest</div>
-            <div className="text-base font-bold" style={{ color: 'var(--accent)' }}>0%</div>
-          </div>
-          <div className="p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
-            <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-tertiary)' }}>Fees</div>
-            <div className="text-base font-bold" style={{ color: 'var(--accent)' }}>$0</div>
-          </div>
+          ))}
         </div>
 
         {/* Duration Picker */}
-        <div className="mb-3">
-          <div className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>Repay within</div>
-          <div className="flex gap-1.5">
-            {[1, 2, 3].map((m) => (
-              <button
-                key={m}
-                onClick={() => setDurationMonths(m)}
-                className="flex-1 py-2.5 rounded-lg text-[13px] font-medium transition-all cursor-pointer"
-                style={{
-                  background: durationMonths === m ? 'var(--accent-muted)' : 'var(--bg-elevated)',
-                  border: `1px solid ${durationMonths === m ? 'var(--accent)' : 'var(--border)'}`,
-                  color: durationMonths === m ? 'var(--accent)' : 'var(--text-secondary)',
-                  fontWeight: durationMonths === m ? 600 : 500,
-                }}
-              >
-                {m} month{m > 1 ? 's' : ''}
-              </button>
-            ))}
+        <div className="mb-4">
+          <div className="text-[11px] mb-2 uppercase tracking-wider font-medium" style={{ color: 'var(--text-tertiary)' }}>
+            Repay within
+          </div>
+          <div className="flex gap-2">
+            {[1, 2, 3].map((m) => {
+              const active = durationMonths === m;
+              return (
+                <button
+                  key={m}
+                  onClick={() => setDurationMonths(m)}
+                  className="flex-1 py-3 rounded-xl text-[13px] font-semibold transition-all cursor-pointer"
+                  style={{
+                    background: active ? 'var(--accent-muted)' : 'var(--bg-elevated)',
+                    border: `1.5px solid ${active ? 'var(--accent)' : 'transparent'}`,
+                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                    boxShadow: active ? '0 0 12px rgba(16,185,129,0.15)' : 'none',
+                  }}
+                >
+                  {m} month{m > 1 ? 's' : ''}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Collateral */}
-        <div className="flex justify-between py-2 text-xs" style={{ borderTop: '1px solid var(--border)' }}>
+        <div className="flex justify-between py-3 text-xs" style={{ borderTop: '1px solid var(--border)' }}>
           <span style={{ color: 'var(--text-tertiary)' }}>Collateral</span>
-          <span style={{ color: 'var(--text-secondary)' }}>
+          <span className="font-medium" style={{ color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
             {formatShares(collar.shares)} TSLA ({formatUsd(collar.collateralValue)})
           </span>
         </div>
 
         {/* Expiry Note */}
-        <div className="text-[11px] mt-2 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
+        <div className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
           Repay <strong style={{ color: 'var(--text-secondary)' }}>by {formatDate(collar.expiryDate)}</strong> to
           unlock shares. If not repaid, shares are sold to settle.
         </div>
@@ -211,17 +217,17 @@ export default function SpendFlow({ prices, onBack, onComplete }: SpendFlowProps
         {/* How does this work? */}
         <button
           onClick={() => setExpandHow(!expandHow)}
-          className="flex items-center gap-2 mt-3 text-xs font-medium cursor-pointer"
+          className="flex items-center gap-2 mt-4 text-xs font-medium cursor-pointer transition-colors"
           style={{ color: 'var(--text-tertiary)' }}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M7 4.5V9.5M4.5 7H9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+            style={{ transform: expandHow ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
           </svg>
           How does this work?
         </button>
         {expandHow && (
-          <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+          <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
             <CollarGraph price={tslaPrice} floor={collar.floor} cap={collar.cap} />
             <div className="text-xs mt-3 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
               This is a 0% interest loan backed by your Tesla shares. We hold a small portion as collateral
@@ -237,8 +243,7 @@ export default function SpendFlow({ prices, onBack, onComplete }: SpendFlowProps
       <button
         onClick={handleSend}
         disabled={val <= 0 || val > maxSpend || sending || !recipientSelected}
-        className="w-full py-4 rounded-xl text-base font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{ background: 'var(--accent)', color: '#000' }}
+        className="btn-primary w-full py-4 text-[15px]"
       >
         {sending ? 'Sending...' : `Send ${formatUsd(val)}`}
       </button>

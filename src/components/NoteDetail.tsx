@@ -54,7 +54,6 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
       });
       setNote({ ...note, status: 'repaid' });
     } catch {
-      // Demo: mark repaid locally
       setNote({ ...note, status: 'repaid' });
     } finally {
       setRepaying(false);
@@ -63,7 +62,9 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
 
   if (loading) {
     return (
-      <div className="text-center py-12 text-sm" style={{ color: 'var(--text-tertiary)' }}>
+      <div className="text-center py-16 text-sm" style={{ color: 'var(--text-tertiary)' }}>
+        <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-3"
+          style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
         Loading...
       </div>
     );
@@ -72,12 +73,13 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
   if (!note) {
     return (
       <div>
-        <button onClick={onBack} className="p-1 mb-4 cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <button onClick={onBack} className="p-2 rounded-lg mb-4 cursor-pointer"
+          style={{ color: 'var(--text-secondary)', background: 'var(--bg-elevated)' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <div className="text-center py-12 text-sm" style={{ color: 'var(--text-tertiary)' }}>
+        <div className="text-center py-16 text-sm" style={{ color: 'var(--text-tertiary)' }}>
           Note not found
         </div>
       </div>
@@ -89,20 +91,27 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
   const daysLeft = Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
   const isUrgent = daysLeft <= 7 && note.status === 'active';
 
+  const statusColors: Record<string, string> = {
+    active: 'var(--accent)',
+    repaid: '#818CF8',
+    expired: '#EF4444',
+  };
+
   return (
     <div>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={onBack} className="p-1 cursor-pointer" style={{ color: 'var(--text-secondary)' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <button onClick={onBack} className="p-2 rounded-lg cursor-pointer transition-colors"
+          style={{ color: 'var(--text-secondary)', background: 'var(--bg-elevated)' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
         <div className="text-lg font-semibold">Spend Note #{note.id}</div>
       </div>
 
-      {/* Recipient */}
-      <div className="flex items-center gap-3 mb-4">
+      {/* Recipient + Amount */}
+      <div className="flex items-center gap-3 mb-2">
         <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white"
           style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
           {note.recipientName.charAt(0)}
@@ -115,67 +124,50 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
         </div>
       </div>
 
-      {/* Amount */}
-      <div className="text-3xl font-bold mb-6" style={{ fontVariantNumeric: 'tabular-nums' }}>
+      <div className="text-[36px] font-bold mb-6" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {formatUsd(note.amount)}
       </div>
 
       {/* Urgency Banner */}
       {isUrgent && (
-        <div className="flex items-center gap-2 p-3 rounded-xl mb-4"
-          style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2">
+        <div className="flex items-center gap-2.5 p-3.5 rounded-xl mb-4"
+          style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
-          <span className="text-xs font-medium" style={{ color: '#F59E0B' }}>
+          <span className="text-xs font-semibold" style={{ color: '#F59E0B' }}>
             {daysLeft === 0 ? 'Expires today!' : `${daysLeft} day${daysLeft > 1 ? 's' : ''} until expiry`}
           </span>
         </div>
       )}
 
       {/* Loan Details */}
-      <div className="p-4 rounded-xl mb-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>
+      <div className="card p-5 mb-5">
+        <div className="text-[11px] font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--text-tertiary)' }}>
           Loan Details
         </div>
 
-        <div className="flex flex-col gap-2.5">
-          <div className="flex justify-between text-sm">
-            <span style={{ color: 'var(--text-tertiary)' }}>Status</span>
-            <span className="font-semibold" style={{
-              color: note.status === 'active' ? 'var(--accent)' : note.status === 'repaid' ? '#6366F1' : '#EF4444'
-            }}>
-              {note.status.charAt(0).toUpperCase() + note.status.slice(1)}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span style={{ color: 'var(--text-tertiary)' }}>Collateral</span>
-            <span className="font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {formatShares(note.shares)} TSLA
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span style={{ color: 'var(--text-tertiary)' }}>Interest</span>
-            <span className="font-semibold" style={{ color: 'var(--accent)' }}>0%</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span style={{ color: 'var(--text-tertiary)' }}>Protection</span>
-            <span className="font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {formatUsd(note.floor)} floor / {formatUsd(note.cap)} cap
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span style={{ color: 'var(--text-tertiary)' }}>Duration</span>
-            <span className="font-semibold">{note.durationMonths} month{note.durationMonths > 1 ? 's' : ''}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span style={{ color: 'var(--text-tertiary)' }}>Repay by</span>
-            <span className="font-semibold">{formatDate(expiry)}</span>
-          </div>
+        <div className="flex flex-col gap-3">
+          {[
+            { label: 'Status', value: note.status.charAt(0).toUpperCase() + note.status.slice(1), color: statusColors[note.status] },
+            { label: 'Collateral', value: `${formatShares(note.shares)} TSLA` },
+            { label: 'Interest', value: '0%', color: 'var(--accent)' },
+            { label: 'Protection', value: `${formatUsd(note.floor)} floor / ${formatUsd(note.cap)} cap` },
+            { label: 'Duration', value: `${note.durationMonths} month${note.durationMonths > 1 ? 's' : ''}` },
+            { label: 'Repay by', value: formatDate(expiry) },
+          ].map((row) => (
+            <div key={row.label} className="flex justify-between text-sm">
+              <span style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
+              <span className="font-semibold" style={{
+                color: row.color ?? 'var(--text-primary)',
+                fontVariantNumeric: 'tabular-nums',
+              }}>{row.value}</span>
+            </div>
+          ))}
         </div>
 
-        <div className="text-[11px] mt-3 pt-3 leading-relaxed" style={{ color: 'var(--text-tertiary)', borderTop: '1px solid var(--border)' }}>
+        <div className="text-[11px] mt-4 pt-4 leading-relaxed" style={{ color: 'var(--text-tertiary)', borderTop: '1px solid var(--border)' }}>
           {note.status === 'repaid'
             ? 'Loan repaid. Your shares have been unlocked and returned.'
             : note.status === 'expired'
@@ -194,8 +186,7 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
         <button
           onClick={handleRepay}
           disabled={repaying}
-          className="w-full py-4 rounded-xl text-base font-semibold cursor-pointer disabled:opacity-50"
-          style={{ background: 'var(--accent)', color: '#000' }}
+          className="btn-primary w-full py-4 text-[15px]"
         >
           {repaying ? 'Processing...' : `Repay ${formatUsd(note.amount)} & Unlock Shares`}
         </button>
