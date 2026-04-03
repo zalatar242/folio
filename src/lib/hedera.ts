@@ -1,0 +1,214 @@
+import {
+  Client,
+  AccountId,
+  PrivateKey,
+  TokenCreateTransaction,
+  TokenType,
+  TokenSupplyType,
+  TokenAssociateTransaction,
+  TokenMintTransaction,
+  TransferTransaction,
+  AccountBalanceQuery,
+  TokenId,
+  Hbar,
+} from '@hashgraph/sdk';
+
+// Module-level singleton (persists across warm serverless invocations)
+let clientInstance: Client | null = null;
+
+export function getClient(): Client {
+  if (clientInstance) return clientInstance;
+
+  const operatorId = process.env.HEDERA_OPERATOR_ID!;
+  const operatorKey = process.env.HEDERA_OPERATOR_KEY!;
+
+  clientInstance = Client.forTestnet();
+  clientInstance.setOperator(
+    AccountId.fromString(operatorId),
+    PrivateKey.fromStringDer(operatorKey)
+  );
+  clientInstance.setDefaultMaxTransactionFee(new Hbar(10));
+
+  return clientInstance;
+}
+
+export function getOperatorId(): AccountId {
+  return AccountId.fromString(process.env.HEDERA_OPERATOR_ID!);
+}
+
+export function getOperatorKey(): PrivateKey {
+  return PrivateKey.fromStringDer(process.env.HEDERA_OPERATOR_KEY!);
+}
+
+// Create a fungible token (MOCK-TSLA or USDC-TEST)
+export async function createFungibleToken(
+  name: string,
+  symbol: string,
+  initialSupply: number,
+  decimals: number = 6
+): Promise<string> {
+  const client = getClient();
+  const operatorKey = getOperatorKey();
+
+  const tx = new TokenCreateTransaction()
+    .setTokenName(name)
+    .setTokenSymbol(symbol)
+    .setTokenType(TokenType.FungibleCommon)
+    .setDecimals(decimals)
+    .setInitialSupply(initialSupply)
+    .setTreasuryAccountId(getOperatorId())
+    .setSupplyType(TokenSupplyType.Infinite)
+    .setSupplyKey(operatorKey.publicKey)
+    .setAdminKey(operatorKey.publicKey)
+    .freezeWith(client);
+
+  const signed = await tx.sign(operatorKey);
+  const response = await signed.execute(client);
+  const receipt = await response.getReceipt(client);
+
+  return receipt.tokenId!.toString();
+}
+
+// Create an NFT collection (SPEND-NOTE)
+export async function createNftCollection(
+  name: string,
+  symbol: string,
+  maxSupply: number = 1000
+): Promise<string> {
+  const client = getClient();
+  const operatorKey = getOperatorKey();
+
+  const tx = new TokenCreateTransaction()
+    .setTokenName(name)
+    .setTokenSymbol(symbol)
+    .setTokenType(TokenType.NonFungibleUnique)
+    .setDecimals(0)
+    .setInitialSupply(0)
+    .setTreasuryAccountId(getOperatorId())
+    .setSupplyType(TokenSupplyType.Finite)
+    .setMaxSupply(maxSupply)
+    .setSupplyKey(operatorKey.publicKey)
+    .setAdminKey(operatorKey.publicKey)
+    .freezeWith(client);
+
+  const signed = await tx.sign(operatorKey);
+  const response = await signed.execute(client);
+  const receipt = await response.getReceipt(client);
+
+  return receipt.tokenId!.toString();
+}
+
+// Mint a Spend Note NFT with metadata
+export async function mintSpendNote(metadata: Uint8Array): Promise<number> {
+  const client = getClient();
+  const operatorKey = getOperatorKey();
+  const tokenId = TokenId.fromString(process.env.SPEND_NOTE_TOKEN_ID!);
+
+  const tx = new TokenMintTransaction()
+    .setTokenId(tokenId)
+    .addMetadata(metadata)
+    .freezeWith(client);
+
+  const signed = await tx.sign(operatorKey);
+  const response = await signed.execute(client);
+  const receipt = await response.getReceipt(client);
+
+  return receipt.serials[0].toNumber();
+}
+
+// Associate tokens with a user account
+export async function associateTokens(
+  accountId: string,
+  tokenIds: string[]
+): Promise<void> {
+  const client = getClient();
+  const operatorKey = getOperatorKey();
+
+  const tx = new TokenAssociateTransaction()
+    .setAccountId(AccountId.fromString(accountId))
+    .setTokenIds(tokenIds.map((id) => TokenId.fromString(id)))
+    .freezeWith(client);
+
+  const signed = await tx.sign(operatorKey);
+  const response = await signed.execute(client);
+  await response.getReceipt(client);
+}
+
+// Transfer fungible tokens (used for escrow lock + USDC advance)
+export async function transferToken(
+  tokenId: string,
+  fromAccount: string,
+  toAccount: string,
+  amount: number
+): Promise<string> {
+  const client = getClient();
+  const operatorKey = getOperatorKey();
+
+  const tx = new TransferTransaction()
+    .addTokenTransfer(
+      TokenId.fromString(tokenId),
+      AccountId.fromString(fromAccount),
+      -amount
+    )
+    .addTokenTransfer(
+      TokenId.fromString(tokenId),
+      AccountId.fromString(toAccount),
+      amount
+    )
+    .freezeWith(client);
+
+  const signed = await tx.sign(operatorKey);
+  const response = await signed.execute(client);
+  const receipt = await response.getReceipt(client);
+
+  return response.transactionId.toString();
+}
+
+// Transfer NFT (Spend Note to user)
+export async function transferNft(
+  tokenId: string,
+  serial: number,
+  fromAccount: string,
+  toAccount: string
+): Promise<string> {
+  const client = getClient();
+  const operatorKey = getOperatorKey();
+
+  const tx = new TransferTransaction()
+    .addNftTransfer(
+      TokenId.fromString(tokenId),
+      serial,
+      AccountId.fromString(fromAccount),
+      AccountId.fromString(toAccount)
+    )
+    .freezeWith(client);
+
+  const signed = await tx.sign(operatorKey);
+  const response = await signed.execute(client);
+  await response.getReceipt(client);
+
+  return response.transactionId.toString();
+}
+
+// Get token balances for an account
+export async function getTokenBalances(
+  accountId: string
+): Promise<Map<string, number>> {
+  const client = getClient();
+  const balance = await new AccountBalanceQuery()
+    .setAccountId(AccountId.fromString(accountId))
+    .execute(client);
+
+  const result = new Map<string, number>();
+  if (balance.tokens) {
+    // Convert the token map to our format
+    const tokenMap = balance.tokens._map ?? balance.tokens;
+    if (tokenMap instanceof Map) {
+      tokenMap.forEach((value: unknown, key: unknown) => {
+        result.set(String(key), Number(value));
+      });
+    }
+  }
+
+  return result;
+}
