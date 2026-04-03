@@ -170,8 +170,9 @@ Step 4: Risk check (guarantees floor covers the advance)
         This is the whole point of the collar: bounded risk.
 
 Step 5: User-chosen repayment duration
-        User picks 7, 14, or 30 days. This maps to the options expiry.
-        Shorter duration = tighter collar band = less upside given up.
+        User picks 1, 2, or 3 months. Each maps to the third Friday
+        of that month (standard options expiry date).
+        Shorter duration = cheaper collar = less upside given up.
         If user repays before expiry: collar unwinds, shares return.
         If user doesn't repay by expiry: shares are sold to cover.
 
@@ -182,7 +183,7 @@ Step 6: Convert to HTS integer amounts
 Output: "Collaring 0.222 TSLA shares ($213.75-$258.75)"
         "Lending: $50 USDC at 0% interest"
         "Fees: $0 (zero-cost collar)"
-        "Repay within: 30 days"
+        "Repay by: May 15, 2026 (3rd Friday, 1-month expiry)"
 
 How the zero-cost collar works: The user's shares are the collateral.
 The put option (bought) protects against downside. The call option
@@ -204,7 +205,7 @@ The floor protects the platform. The cap is what the user gives up. For small sp
 "So I built this." Open app. Show portfolio: 44 shares of TSLA at $225 = $9,900. "These are real Tesla prices, live, right now."
 
 **[1:00-1:45] The Magic Moment**
-"I want to spend $50." Enter amount. Screen shows: collar band, shares used, 0% interest, $0 fees, repayment duration (7/14/30 days). "The system just hedged 0.222 shares of my Tesla with a zero-cost collar — bounded risk, bounded upside. Because the risk is bounded, it can lend me $50 at zero percent interest with zero fees." Tap "Spend." Payment executes. Portfolio updates.
+"I want to spend $50." Pick a recipient, enter amount. Screen shows: Klarna-style "pay later" disclosure with 0% interest, $0 fees, repayment duration (1/2/3 months, mapped to options expiry dates). "The system just hedged 0.222 shares of my Tesla with a zero-cost collar — bounded risk, bounded upside. Because the risk is bounded, it can lend me $50 at zero percent interest with zero fees." Tap "Spend." Payment executes. Portfolio updates.
 
 **[1:45-2:15] The Spend Note**
 "Here's what just happened." Open the Spend Note receipt. Show: asset slice, collar band, advance amount, status. "Every payment is a micro-structured-product. Fully transparent. On-chain."
@@ -321,7 +322,7 @@ For the hackathon: use Pinata or nft.storage for IPFS pinning (free tier, instan
 
 1. **Hedera "No Solidity" + Chainlink CRE compatibility:** If CRE triggers HTS calls (not smart contracts), does it still qualify for "No Solidity"? Need to confirm with Hedera booth at hackathon.
 2. **Yahoo Finance API rate limits:** Free tier is fragile (scraping-based, routinely throttled). **Primary:** Twelve Data free tier (800 req/day, real-time). **Fallback:** Alpha Vantage (500 req/day). **Last resort:** hardcode a recent price and show "last updated" timestamp. Test all three before the hackathon. A price feed failure during the live demo is catastrophic.
-3. **Collar parameters for demo:** 5% floor / 15% cap chosen for visual clarity. Zero-cost collar (put/call premiums cancel). User picks repayment duration (7/14/30 days) which maps to options expiry.
+3. **Collar parameters for demo:** 5% floor / 15% cap chosen for visual clarity. Zero-cost collar (put/call premiums cancel). User picks 1/2/3 month repayment, mapped to third Friday options expiry dates. Shorter = cheaper collar.
 4. **Repayment flow:** For the demo, do we need to show loan repayment? Or is the "spend" moment enough? Recommendation: skip repayment for MVP, mention it in pitch as "when your collar expires or you repay, your shares unlock."
 
 ## Success Criteria
