@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useDynamicContext, useUserWallets } from '@dynamic-labs/sdk-react-core';
 import { authFetch } from '@/lib/use-auth-fetch';
 import { useHederaKey } from './use-hedera-key';
-import { getStoredPublicKey } from './hedera-keystore';
+import { hasKeypair, getStoredPublicKey } from './hedera-keystore';
 
 export interface FolioUser {
   email: string;
@@ -28,7 +28,7 @@ type RegistrationStatus =
 export function useUserRegistration() {
   const { user } = useDynamicContext();
   const userWallets = useUserWallets();
-  const { hasKey, publicKeyDer, generateKey, signTransaction, encryptAndStore, recoverKey } = useHederaKey();
+  const { publicKeyDer, generateKey, signTransaction, encryptAndStore, recoverKey } = useHederaKey();
   const [folioUser, setFolioUser] = useState<FolioUser | null>(null);
   const [status, setStatus] = useState<RegistrationStatus>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -123,8 +123,10 @@ export function useUserRegistration() {
     async function register() {
       try {
         // If we already have a key locally, try normal registration
-        let pubKey = publicKeyDer;
-        if (hasKey && pubKey) {
+        // Read directly from localStorage to avoid race with useEffect state
+        const localHasKey = hasKeypair();
+        let pubKey = localHasKey ? getStoredPublicKey() : publicKeyDer;
+        if (localHasKey && pubKey) {
           setStatus('creating-account');
           const res = await authFetch('/api/users/register', {
             method: 'POST',
