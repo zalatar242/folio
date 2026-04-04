@@ -1,7 +1,7 @@
 {
   "schedule": "0 */5 * * * *",
-  "chainSelectorName": "ethereum-testnet-sepolia",
-  "collarOracleAddress": "0x0000000000000000000000000000000000000000",
+  "chainSelectorName": "ethereum-testnet-sepolia-base-1",
+  "collarOracleAddress": "0x00A3cF51bA20eA6f1754BaFcecA6d144e3d1D00f",
   "dataStreamsUrl": "https://api.testnet-dataengine.chain.link",
   "dolthubBaseUrl": "https://www.dolthub.com/api/v1alpha1/post-no-preference/options/master",
   "secretOwner": "",

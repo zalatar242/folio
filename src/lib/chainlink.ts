@@ -2,7 +2,7 @@
 // The CRE workflow writes these params; Folio's frontend reads them.
 
 import { createPublicClient, http, parseAbi } from 'viem';
-import { sepolia } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 
 const COLLAR_ORACLE_ABI = parseAbi([
   'function getCollar(string symbol) external view returns (tuple(uint256 price, uint256 floor, uint256 cap, uint256 volatility, uint256 updatedAt))',
@@ -19,13 +19,13 @@ export interface ChainlinkCollar {
   source: 'chainlink';
 }
 
-const COLLAR_ORACLE_ADDRESS = process.env.COLLAR_ORACLE_ADDRESS;
-const SEPOLIA_RPC = process.env.SEPOLIA_RPC_URL || 'https://ethereum-sepolia-rpc.publicnode.com';
+const COLLAR_ORACLE_ADDRESS = process.env.COLLAR_ORACLE_ADDRESS || '0x00A3cF51bA20eA6f1754BaFcecA6d144e3d1D00f';
+const BASE_SEPOLIA_RPC = process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
 
 function getClient() {
   return createPublicClient({
-    chain: sepolia,
-    transport: http(SEPOLIA_RPC),
+    chain: baseSepolia,
+    transport: http(BASE_SEPOLIA_RPC),
   });
 }
 

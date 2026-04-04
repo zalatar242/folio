@@ -1,0 +1,7 @@
+[profile.default]
+src = "chainlink/contracts"
+out = "chainlink/contracts/abi"
+libs = ["lib"]
+remappings = [
+  "@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/",
+]
