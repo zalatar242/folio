@@ -109,7 +109,6 @@ export default function CardsList({ onGetCard, onSelectCard }: CardsListProps) {
               {activeCards.map((card) => {
                 const config = statusConfig[card.status];
                 const created = new Date(card.createdAt);
-                const expiry = new Date(card.expiryDate);
                 const isFrozen = card.cardState === 'PAUSED';
 
                 return (
@@ -162,7 +161,7 @@ export default function CardsList({ onGetCard, onSelectCard }: CardsListProps) {
                           Folio Card •••• {card.cardLastFour}
                         </div>
                         <div className="text-[12px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-                          {card.symbol} · {created.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · Settle by {expiry.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {card.symbol} · {created.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </div>
                       </div>
                       <span className="pill" style={{ background: config.bg, color: config.color }}>

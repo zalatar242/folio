@@ -242,7 +242,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <div className="text-lg font-semibold">{mode === 'send' ? 'Send Payment' : 'Load Card'}</div>
+        <div className="text-lg font-semibold">{mode === 'send' ? 'Send Payment' : 'Get Card'}</div>
       </div>
 
       {/* Recipient (send mode only) */}
@@ -411,7 +411,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
               <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
             </svg>
           </div>
-          <div className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>0% interest loan from your portfolio</div>
+          <div className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>{mode === 'send' ? '0% interest from your portfolio' : 'No interest, no fees'}</div>
         </div>
 
         {/* Stat Grid */}
@@ -435,7 +435,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
         {/* Duration Picker */}
         <div>
           <div className="text-[11px] mb-3 uppercase tracking-wider font-medium" style={{ color: 'var(--text-tertiary)' }}>
-            Repay within
+            {mode === 'send' ? 'Repay within' : 'Duration'}
           </div>
           <div className="flex gap-2.5">
             {[1, 2, 3].map((m) => {
@@ -486,8 +486,11 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
 
         {/* Repayment Note */}
         <div className="text-[12px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
-          Repay <strong style={{ color: 'var(--text-secondary)' }}>by {formatDate(collar.expiryDate)}</strong> to
-          unlock your shares. If not repaid, shares are sold to settle.
+          {mode === 'send' ? (
+            <>Repay <strong style={{ color: 'var(--text-secondary)' }}>by {formatDate(collar.expiryDate)}</strong> to unlock your shares. If not repaid, shares are sold to settle.</>
+          ) : (
+            <>Pay back <strong style={{ color: 'var(--text-secondary)' }}>by {formatDate(collar.expiryDate)}</strong> to release your shares. No interest, no fees, ever.</>
+          )}
         </div>
 
         {/* How does this work? */}
@@ -552,7 +555,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
             : sendStatus === 'signing' ? 'Signing...'
             : sendStatus === 'submitting' ? 'Submitting...'
             : 'Processing...')
-          : (mode === 'send' ? `Send ${formatUsd(val)}` : `Get Card · ${formatUsd(val)} at 0%`)}
+          : (mode === 'send' ? `Send ${formatUsd(val)}` : `Get ${formatUsd(val)} Card`)}
       </button>
     </div>
   );
