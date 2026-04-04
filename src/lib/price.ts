@@ -1,4 +1,10 @@
-// Stock price fetcher — Yahoo Finance with hardcoded fallback
+// Stock price fetcher — Chainlink oracle → Yahoo Finance → hardcoded fallback
+//
+// When the CollarOracle has a fresh DON-verified price from Data Streams,
+// use that as the authoritative source. Falls back to Yahoo Finance, then
+// to hardcoded prices as a last resort.
+
+import { getChainlinkCollar } from './chainlink';
 
 interface PriceData {
   symbol: string;
@@ -6,7 +12,7 @@ interface PriceData {
   change: number;
   changePercent: number;
   lastUpdated: string;
-  source: 'live' | 'cached' | 'fallback';
+  source: 'live' | 'cached' | 'fallback' | 'chainlink';
 }
 
 // Hardcoded fallback prices — stale, only used when Yahoo is unreachable
@@ -40,6 +46,30 @@ export async function getStockPrice(symbol: string): Promise<PriceData> {
   // Return cached if fresh
   if (priceCache[symbol] && now - lastFetch < CACHE_TTL) {
     return { ...priceCache[symbol], source: 'cached' };
+  }
+
+  // Try Chainlink oracle first — DON-verified price from Data Streams
+  try {
+    const collar = await getChainlinkCollar(symbol);
+    if (collar && collar.price > 0) {
+      const ageMs = now - collar.updatedAt.getTime();
+      if (ageMs < 60 * 60 * 1000) { // fresh within 1 hour
+        const data: PriceData = {
+          symbol,
+          price: collar.price,
+          change: 0,
+          changePercent: 0,
+          lastUpdated: collar.updatedAt.toISOString(),
+          source: 'chainlink',
+        };
+        priceCache[symbol] = data;
+        lastFetch = now;
+        console.log(`[price] ${symbol}: $${collar.price.toFixed(2)} (Chainlink oracle)`);
+        return data;
+      }
+    }
+  } catch {
+    // Chainlink unavailable, fall through to Yahoo
   }
 
   try {

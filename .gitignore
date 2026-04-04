@@ -8,5 +8,8 @@ out/
 .gstack/
 .vercel
 *.tsbuildinfo
+cache/
+chainlink/contracts/abi/
+foundry.lock
 .plaid-tokens.json
 .user-registry.json
