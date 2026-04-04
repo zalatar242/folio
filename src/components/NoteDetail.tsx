@@ -108,7 +108,7 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <div className="text-lg font-semibold">Spend Note #{note.id}</div>
+        <div className="text-lg font-semibold">Transaction #{note.id}</div>
       </div>
 
       {/* Recipient + Amount */}

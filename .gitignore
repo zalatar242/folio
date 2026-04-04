@@ -9,3 +9,4 @@ out/
 .vercel
 *.tsbuildinfo
 .plaid-tokens.json
+.user-registry.json

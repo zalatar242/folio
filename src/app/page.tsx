@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '@/components/Sidebar';
 import BottomNav from '@/components/BottomNav';
 import Portfolio from '@/components/Portfolio';
-import SpendFlow from '@/components/SpendFlow';
+import StockDetail from '@/components/StockDetail';
+import SpendFlow, { type SpendMode } from '@/components/SpendFlow';
 import Confirmation from '@/components/Confirmation';
 import CardResult from '@/components/CardResult';
 import CardsList from '@/components/CardsList';
@@ -13,9 +14,10 @@ import NoteDetail from '@/components/NoteDetail';
 import Settings from '@/components/Settings';
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { usePlaidHoldings } from '@/lib/use-plaid-holdings';
+import { useUserRegistration } from '@/lib/use-user-registration';
 import type { Holding } from '@/lib/types';
 
-export type Screen = 'portfolio' | 'spend' | 'confirm' | 'card-result' | 'cards' | 'notes' | 'note-detail' | 'settings';
+export type Screen = 'portfolio' | 'stock-detail' | 'spend' | 'confirm' | 'card-result' | 'cards' | 'notes' | 'note-detail' | 'settings';
 
 export interface PriceData {
   symbol: string;
@@ -43,7 +45,8 @@ export interface SpendResult {
     token: string;
   };
   // P2P fields (present when send flow is used)
-  recipientName?: string;
+  recipientName?: string; // Hedera account ID of recipient
+  recipientAccountId?: string;
 }
 
 export default function Home() {
@@ -52,14 +55,17 @@ export default function Home() {
   const [lastSpend, setLastSpend] = useState<SpendResult | null>(null);
   const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
   const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
+  const [spendMode, setSpendMode] = useState<SpendMode>('send');
 
   const { status: plaidStatus, holdings, openLink, isPlaidAvailable, isDemo } = usePlaidHoldings();
+  useUserRegistration(); // Auto-creates Hedera account on first login
 
   const navMap: Record<Screen, string> = {
     portfolio: 'portfolio',
+    'stock-detail': 'portfolio',
     spend: 'spend',
     confirm: 'spend',
-    'card-result': 'spend',
+    'card-result': 'cards',
     cards: 'cards',
     notes: 'notes',
     'note-detail': 'notes',
@@ -93,8 +99,14 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [fetchPrices]);
 
-  const handleSpendFromHolding = (holding: Holding) => {
+  const handleViewHolding = (holding: Holding) => {
     setSelectedHolding(holding);
+    setScreen('stock-detail');
+  };
+
+  const handleSpendFromHolding = (holding: Holding, mode: SpendMode = 'send') => {
+    setSelectedHolding(holding);
+    setSpendMode(mode);
     setScreen('spend');
   };
 
@@ -123,9 +135,8 @@ export default function Home() {
               isPlaidAvailable={isPlaidAvailable}
               isDemo={isDemo}
               onConnectBrokerage={openLink}
-              onSpendFromHolding={handleSpendFromHolding}
+              onSpendFromHolding={handleViewHolding}
               onSpend={() => {
-                // Default: spend from first holding with shares
                 const first = holdings.find((h) => h.shares > 0);
                 if (first) handleSpendFromHolding(first);
                 else setScreen('spend');
@@ -133,11 +144,21 @@ export default function Home() {
               onViewNotes={() => setScreen('notes')}
             />
           )}
+          {screen === 'stock-detail' && selectedHolding && (
+            <StockDetail
+              holding={selectedHolding}
+              price={prices[selectedHolding.symbol]}
+              onBack={() => setScreen('portfolio')}
+              onSpend={() => handleSpendFromHolding(selectedHolding)}
+            />
+          )}
           {screen === 'spend' && (
             <SpendFlow
+              mode={spendMode}
               selectedHolding={selectedHolding || holdings.find((h) => h.shares > 0) || holdings[0]}
+              holdings={holdings}
               prices={prices}
-              onBack={() => setScreen('portfolio')}
+              onBack={() => spendMode === 'card' ? setScreen('cards') : setScreen('portfolio')}
               onComplete={handleSpendComplete}
             />
           )}
@@ -165,8 +186,8 @@ export default function Home() {
           {screen === 'cards' && (
             <CardsList onGetCard={() => {
               const first = holdings.find((h) => h.shares > 0);
-              if (first) handleSpendFromHolding(first);
-              else setScreen('spend');
+              if (first) handleSpendFromHolding(first, 'card');
+              else { setSpendMode('card'); setScreen('spend'); }
             }} />
           )}
           {screen === 'notes' && (

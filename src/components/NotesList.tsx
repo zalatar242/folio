@@ -44,7 +44,7 @@ export default function NotesList({ onSelectNote }: NotesListProps) {
 
   return (
     <div>
-      <div className="text-xl font-semibold mb-6">Spend Notes</div>
+      <div className="text-xl font-semibold mb-6">Transactions</div>
 
       {loading ? (
         <div className="text-center py-20 text-[14px]" style={{ color: 'var(--text-tertiary)' }}>
@@ -61,9 +61,9 @@ export default function NotesList({ onSelectNote }: NotesListProps) {
               <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
             </svg>
           </div>
-          <div className="text-[15px] font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>No spend notes yet</div>
+          <div className="text-[15px] font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>No transactions yet</div>
           <div className="text-[13px]" style={{ color: 'var(--text-tertiary)' }}>
-            Send a payment to create your first spend note
+            Send a payment to create your first transaction
           </div>
         </div>
       ) : (

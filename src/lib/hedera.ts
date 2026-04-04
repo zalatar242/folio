@@ -2,6 +2,7 @@ import {
   Client,
   AccountId,
   PrivateKey,
+  AccountCreateTransaction,
   TokenCreateTransaction,
   TokenType,
   TokenSupplyType,
@@ -229,6 +230,23 @@ export async function transferNft(
   await response.getReceipt(client);
 
   return response.transactionId.toString();
+}
+
+// Create a new Hedera account (for new app users)
+export async function createAccount(): Promise<{ accountId: string; privateKey: string }> {
+  const client = getClient();
+  const newKey = PrivateKey.generateED25519();
+
+  const tx = new AccountCreateTransaction()
+    .setKey(newKey.publicKey)
+    .setInitialBalance(new Hbar(5)) // Fund with 5 HBAR for testnet tx fees
+    .freezeWith(client);
+
+  const response = await tx.execute(client);
+  const receipt = await response.getReceipt(client);
+  const accountId = receipt.accountId!.toString();
+
+  return { accountId, privateKey: newKey.toStringDer() };
 }
 
 // Get token balances for an account

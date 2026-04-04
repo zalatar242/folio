@@ -27,6 +27,8 @@ export default function Portfolio({
   onSpend,
   onViewNotes,
 }: PortfolioProps) {
+  const visibleHoldings = holdings.filter((h) => h.shares > 0);
+
   const totalValue = holdings.reduce((sum, h) => {
     const price = prices[h.symbol]?.price ?? 0;
     return sum + h.shares * price;
@@ -38,7 +40,7 @@ export default function Portfolio({
   }, 0);
 
   const isPositive = totalChange >= 0;
-  const hasHoldings = holdings.some((h) => h.shares > 0);
+  const hasHoldings = visibleHoldings.length > 0;
 
   return (
     <div className="space-y-10">
@@ -68,7 +70,7 @@ export default function Portfolio({
           Send Payment
         </button>
         <button onClick={onViewNotes} className="btn-secondary flex-1 py-4 text-[15px]">
-          Spend Notes
+          Transactions
         </button>
       </div>
 
@@ -93,7 +95,7 @@ export default function Portfolio({
         ) : (
           /* Holdings List */
           <div className="space-y-3">
-            {holdings.map((h) => {
+            {visibleHoldings.map((h) => {
               const price = prices[h.symbol]?.price ?? 0;
               const change = prices[h.symbol]?.changePercent ?? 0;
               const value = h.shares * price;
@@ -102,9 +104,9 @@ export default function Portfolio({
               return (
                 <button
                   key={h.symbol}
-                  onClick={() => h.shares > 0 && onSpendFromHolding(h)}
+                  onClick={() => onSpendFromHolding(h)}
                   className="w-full card flex items-center gap-4 p-5 text-left transition-all"
-                  style={{ cursor: h.shares > 0 ? 'pointer' : 'default' }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white"
                     style={{ background: h.gradient }}>

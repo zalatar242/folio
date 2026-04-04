@@ -18,8 +18,18 @@ const mockPrices = {
   AAPL: { symbol: 'AAPL', price: 180, change: 2, changePercent: 1.1, lastUpdated: '' },
 };
 
+const teslaHolding: Holding = {
+  symbol: 'TSLA',
+  name: 'Tesla',
+  shares: 44,
+  icon: 'T',
+  gradient: 'linear-gradient(135deg, #E31937, #B91C3A)',
+};
+
 const defaultProps = {
+  mode: 'send' as const,
   selectedHolding: appleHolding,
+  holdings: [appleHolding, teslaHolding],
   prices: mockPrices,
   onBack: jest.fn(),
   onComplete: jest.fn(),

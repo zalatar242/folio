@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       symbol = 'TSLA',
       durationMonths = 1,
       issueCard = false,
-      recipientName,
+      recipientAccountId,
       userAccountId,
     } = body;
 
@@ -39,8 +39,11 @@ export async function POST(req: NextRequest) {
       const usdcTokenId = process.env.USDC_TEST_TOKEN_ID!;
       const noteTokenId = process.env.SPEND_NOTE_TOKEN_ID!;
 
+      // Lock sender's collateral: sender → operator
       txId = await transferToken(stockTokenId, userAccountId, operatorId, collar.sharesHts);
-      await transferToken(usdcTokenId, operatorId, userAccountId, collar.advanceHts);
+      // Transfer USDC advance to recipient (P2P) or back to sender (card)
+      const advanceTarget = recipientAccountId || userAccountId;
+      await transferToken(usdcTokenId, operatorId, advanceTarget, collar.advanceHts);
 
       const now = new Date().toISOString();
       const { serial } = await mintSpendNoteWithIpfs({
@@ -85,8 +88,8 @@ export async function POST(req: NextRequest) {
     const note = addNote({
       symbol,
       serial: hederaConfigured ? 1 : Date.now(),
-      recipient: userAccountId || 'demo-user',
-      recipientName: recipientName || 'Virtual Card',
+      recipient: recipientAccountId || userAccountId || 'demo-user',
+      recipientName: recipientAccountId || 'Virtual Card',
       amount: collar.advance,
       shares: collar.shares,
       sharesHts: collar.sharesHts,
@@ -99,6 +102,7 @@ export async function POST(req: NextRequest) {
       txId,
       createdAt: new Date().toISOString(),
       userAccountId: userAccountId || 'demo-user',
+      recipientAccountId: recipientAccountId || undefined,
       cardToken,
       cardLastFour,
     });

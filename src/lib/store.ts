@@ -19,6 +19,7 @@ export interface SpendNote {
   txId: string;
   createdAt: string;
   userAccountId: string;
+  recipientAccountId?: string; // Hedera account ID for P2P transfers
   // Virtual card fields
   cardToken?: string;
   cardLastFour?: string;

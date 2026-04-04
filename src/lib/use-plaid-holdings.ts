@@ -47,7 +47,32 @@ export function usePlaidHoldings(): PlaidHookResult {
         setHoldings(DEMO_HOLDINGS);
       }
 
-      // Then check Plaid availability
+      // Try loading previously-connected brokerage holdings (token persists on disk)
+      try {
+        const brokerageRes = await fetch('/api/plaid/holdings?userId=demo-user');
+        if (brokerageRes.ok && !cancelled) {
+          const brokerageData = await brokerageRes.json();
+          if (brokerageData.holdings?.length > 0) {
+            const brokerageHoldings: Holding[] = brokerageData.holdings;
+            setHoldings((prev) => {
+              const merged = new Map<string, Holding>();
+              for (const h of prev) merged.set(h.symbol, { ...h });
+              for (const h of brokerageHoldings) {
+                const existing = merged.get(h.symbol);
+                if (existing) {
+                  merged.set(h.symbol, { ...existing, shares: existing.shares + h.shares });
+                } else {
+                  merged.set(h.symbol, h);
+                }
+              }
+              return Array.from(merged.values());
+            });
+            setIsDemo(false);
+          }
+        }
+      } catch { /* no previously connected account — that's fine */ }
+
+      // Then check Plaid availability for new connections
       try {
         const res = await fetch('/api/plaid/create-link-token', {
           method: 'POST',
@@ -81,14 +106,14 @@ export function usePlaidHoldings(): PlaidHookResult {
     return () => { cancelled = true; };
   }, [fetchHederaHoldings]);
 
-  // Fetch holdings after connection
+  // Fetch brokerage holdings and merge with existing HTS tokenized holdings
   const fetchHoldings = useCallback(async () => {
     try {
       const res = await fetch('/api/plaid/holdings?userId=demo-user');
       if (!res.ok) throw new Error('Failed to fetch holdings');
       const data = await res.json();
 
-      const mapped: Holding[] = data.holdings.map((h: { symbol: string; name: string; shares: number }) => ({
+      const brokerageHoldings: Holding[] = data.holdings.map((h: { symbol: string; name: string; shares: number }) => ({
         symbol: h.symbol,
         name: h.name,
         shares: h.shares,
@@ -96,12 +121,26 @@ export function usePlaidHoldings(): PlaidHookResult {
         gradient: holdingGradient(h.symbol),
       }));
 
-      if (mapped.length > 0) {
-        setHoldings(mapped);
+      if (brokerageHoldings.length > 0) {
+        // Merge: start with current HTS holdings, add/combine brokerage holdings
+        setHoldings((prev) => {
+          const merged = new Map<string, Holding>();
+          // Add existing HTS tokenized holdings first
+          for (const h of prev) {
+            merged.set(h.symbol, { ...h });
+          }
+          // Layer in brokerage holdings — combine shares for overlapping symbols
+          for (const h of brokerageHoldings) {
+            const existing = merged.get(h.symbol);
+            if (existing) {
+              merged.set(h.symbol, { ...existing, shares: existing.shares + h.shares });
+            } else {
+              merged.set(h.symbol, h);
+            }
+          }
+          return Array.from(merged.values());
+        });
         setIsDemo(false);
-      } else {
-        setHoldings(DEMO_HOLDINGS);
-        setIsDemo(true);
       }
       setStatus('connected');
     } catch {

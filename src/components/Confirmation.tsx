@@ -22,9 +22,9 @@ export default function Confirmation({ result, onViewDetails, onDone }: Confirma
         </svg>
       </div>
 
-      <div className="text-[26px] font-bold mb-2">Done!</div>
+      <div className="text-[26px] font-bold mb-2">Sent!</div>
       <div className="text-[15px] mb-10" style={{ color: 'var(--text-secondary)' }}>
-        {formatUsd(result.amount)} advance from your portfolio
+        {formatUsd(result.amount)} sent to {result.recipientAccountId || 'your portfolio'}
       </div>
 
       {/* Advance Summary Card */}
@@ -36,14 +36,15 @@ export default function Confirmation({ result, onViewDetails, onDone }: Confirma
         <div className="flex flex-col gap-4">
           {[
             { label: 'Amount', value: formatUsd(result.amount) },
+            ...(result.recipientAccountId ? [{ label: 'Recipient', value: result.recipientAccountId, mono: true }] : []),
             { label: 'Collateral', value: `${formatShares(result.shares)} ${result.symbol}` },
             { label: 'Interest', value: '0%', accent: true },
-            { label: 'Protected until', value: formatDate(expiryDate) },
+            { label: 'Repay by', value: formatDate(expiryDate) },
           ].map((row) => (
             <div key={row.label} className="flex justify-between text-[14px]">
               <span style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
-              <span className="font-semibold" style={{
-                color: row.accent ? 'var(--accent)' : 'var(--text-primary)',
+              <span className={`font-semibold ${('mono' in row && row.mono) ? 'font-mono text-[12px]' : ''}`} style={{
+                color: ('accent' in row && row.accent) ? 'var(--accent)' : 'var(--text-primary)',
                 fontVariantNumeric: 'tabular-nums',
               }}>{row.value}</span>
             </div>
@@ -58,13 +59,21 @@ export default function Confirmation({ result, onViewDetails, onDone }: Confirma
 
       {/* Transaction ID */}
       <div className="text-[11px] mb-8 font-mono" style={{ color: 'var(--text-tertiary)' }}>
-        TX: {result.txId}
+        <a
+          href={`https://hashscan.io/testnet/transaction/${result.txId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
+          Verify on Hedera Testnet
+        </a>
       </div>
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
         <button onClick={onViewDetails} className="btn-primary w-full py-4 text-[15px]">
-          View Spend Note
+          View Transaction
         </button>
         <button onClick={onDone} className="btn-secondary w-full py-4 text-[15px]">
           Back to Portfolio
