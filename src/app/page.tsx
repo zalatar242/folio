@@ -170,6 +170,10 @@ export default function Home() {
             <StockDetail
               holding={selectedHolding}
               price={prices[selectedHolding.symbol]}
+              totalPortfolioValue={
+                holdings.reduce((sum, h) => sum + h.shares * (prices[h.symbol]?.price ?? 0), 0)
+                + cryptoHoldings.reduce((sum, h) => sum + (h.symbol === 'USDC' ? h.shares : 0), 0)
+              }
               onBack={() => setScreen('portfolio')}
               onSpend={() => handleSpendFromHolding(selectedHolding)}
             />

@@ -6,11 +6,12 @@ import type { Holding } from '@/lib/types';
 interface StockDetailProps {
   holding: Holding;
   price?: PriceData;
+  totalPortfolioValue: number;
   onBack: () => void;
   onSpend: () => void;
 }
 
-export default function StockDetail({ holding, price, onBack, onSpend }: StockDetailProps) {
+export default function StockDetail({ holding, price, totalPortfolioValue, onBack, onSpend }: StockDetailProps) {
   const isCrypto = holding.type === 'crypto';
   const isUsdc = holding.symbol === 'USDC';
 
@@ -89,8 +90,9 @@ export default function StockDetail({ holding, price, onBack, onSpend }: StockDe
           { label: 'Network', value: 'Hedera Testnet' },
         ] : [
           { label: 'Shares', value: holding.shares.toLocaleString() },
-          { label: 'Price per Share', value: priceLoaded ? `$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '···' },
+          { label: 'Avg Price', value: priceLoaded ? `$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '···' },
           { label: 'Market Value', value: priceLoaded ? `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '···' },
+          { label: 'Portfolio Weight', value: totalPortfolioValue > 0 ? `${((totalValue / totalPortfolioValue) * 100).toFixed(1)}%` : '—' },
         ]).map((row, i, arr) => (
           <div key={row.label} className="flex justify-between py-3.5 text-[14px]"
             style={i < arr.length - 1 ? { borderBottom: '1px solid var(--border)' } : undefined}>
