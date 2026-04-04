@@ -26,6 +26,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     }
 
+    if (!userAccountId) {
+      return NextResponse.json({ error: 'userAccountId required' }, { status: 400 });
+    }
+
     const priceData = await getStockPrice(symbol);
     const collar = calculateCollar(amount, priceData.price, durationMonths);
 
