@@ -36,8 +36,8 @@ const FALLBACK_PRICES: Record<string, PriceData> = {
 };
 
 // Cache to avoid hammering the API (per-symbol timestamps)
-let priceCache: Record<string, PriceData> = {};
-let lastFetchPerSymbol: Record<string, number> = {};
+const priceCache: Record<string, PriceData> = {};
+const lastFetchPerSymbol: Record<string, number> = {};
 const CACHE_TTL = 30_000; // 30 seconds
 
 export async function getStockPrice(symbol: string): Promise<PriceData> {

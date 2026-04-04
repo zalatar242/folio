@@ -2,7 +2,6 @@
 
 // viem — types are referenced but not bundled in some install configurations
 declare module 'viem' {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   export function encodeFunctionData(options: {
     abi: readonly unknown[];
     functionName: string;

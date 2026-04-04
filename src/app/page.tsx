@@ -330,7 +330,6 @@ export default function Home() {
           {screen === 'card-result' && lastSpend && (
             <CardResult
               result={lastSpend}
-              onViewCards={() => setScreen('cards')}
               onViewCardDetail={() => {
                 setSelectedNoteId(lastSpend.noteId);
                 setScreen('card-detail');

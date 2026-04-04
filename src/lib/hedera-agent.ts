@@ -133,7 +133,6 @@ export async function runAgent(userPrompt: string): Promise<{
   });
 
   // Extract tool calls from all steps
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allToolCalls: Array<{ tool: string; args: Record<string, unknown>; result: unknown }> = [];
   for (const step of result.steps) {
     for (const call of step.toolCalls ?? []) {
@@ -143,9 +142,10 @@ export async function runAgent(userPrompt: string): Promise<{
       );
       allToolCalls.push({
         tool: call.toolName,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         args: (call as any).args ?? {},
         result: matchingResult ? (matchingResult as any).result : null,
+        /* eslint-enable @typescript-eslint/no-explicit-any */
       });
     }
   }
