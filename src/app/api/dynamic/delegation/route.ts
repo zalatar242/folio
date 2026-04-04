@@ -22,7 +22,9 @@ export async function POST(req: NextRequest) {
       .update(rawBody)
       .digest('hex');
 
-    if (signature !== expectedSignature) {
+    const sigBuffer = Buffer.from(signature, 'utf-8');
+    const expectedBuffer = Buffer.from(expectedSignature, 'utf-8');
+    if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -75,7 +77,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: 'Webhook processing failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 },
     );

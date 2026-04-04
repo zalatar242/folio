@@ -11,6 +11,10 @@ export async function POST(req: NextRequest) {
   try {
     const { evmAddress } = await req.json();
 
+    if (!evmAddress || typeof evmAddress !== 'string' || !/^0x[a-fA-F0-9]{40}$/.test(evmAddress)) {
+      return NextResponse.json({ error: 'Invalid EVM address' }, { status: 400 });
+    }
+
     const { error } = await supabase
       .from('users')
       .update({ evm_wallet_address: evmAddress })
