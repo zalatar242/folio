@@ -2,6 +2,17 @@
 
 All notable changes to Folio will be documented in this file.
 
+## [0.2.3.1] - 2026-04-04
+
+### Changed
+- Card detail page redesigned with balance as hero element, Apple Card-style quick actions, and lending mechanics hidden in expandable "How it works" section
+- Card list items no longer show settlement dates, keeping the wallet feel clean
+- Spend flow card-mode copy softened: "Get Card" header, "No interest, no fees" messaging, simpler CTA
+- "Collateral" label replaced with "Backed by" across all card surfaces for consistent wallet-first language
+
+### Fixed
+- "How it works" section now uses past tense for settled and expired cards
+
 ## [0.2.3.0] - 2026-04-04
 
 ### Added
