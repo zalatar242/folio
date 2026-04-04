@@ -10,11 +10,12 @@ import CardResult from '@/components/CardResult';
 import CardsList from '@/components/CardsList';
 import NotesList from '@/components/NotesList';
 import NoteDetail from '@/components/NoteDetail';
+import Settings from '@/components/Settings';
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { usePlaidHoldings } from '@/lib/use-plaid-holdings';
 import type { Holding } from '@/lib/types';
 
-export type Screen = 'portfolio' | 'spend' | 'confirm' | 'card-result' | 'cards' | 'notes' | 'note-detail';
+export type Screen = 'portfolio' | 'spend' | 'confirm' | 'card-result' | 'cards' | 'notes' | 'note-detail' | 'settings';
 
 export interface PriceData {
   symbol: string;
@@ -62,6 +63,7 @@ export default function Home() {
     cards: 'cards',
     notes: 'notes',
     'note-detail': 'notes',
+    settings: 'settings',
   };
 
   const fetchPrices = useCallback(async () => {
@@ -172,6 +174,14 @@ export default function Home() {
           )}
           {screen === 'note-detail' && selectedNoteId && (
             <NoteDetail noteId={selectedNoteId} onBack={() => setScreen('notes')} />
+          )}
+          {screen === 'settings' && (
+            <Settings
+              plaidStatus={plaidStatus}
+              isPlaidAvailable={isPlaidAvailable}
+              isDemo={isDemo}
+              onConnectBrokerage={openLink}
+            />
           )}
         </div>
       </main>

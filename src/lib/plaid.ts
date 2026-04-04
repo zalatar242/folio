@@ -1,6 +1,8 @@
-// Plaid client singleton + in-memory token store
+// Plaid client singleton + file-backed token store
 
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
+import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 
 const configuration = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],
@@ -18,18 +20,32 @@ export const isPlaidConfigured = !!(
   process.env.PLAID_CLIENT_ID && process.env.PLAID_SECRET
 );
 
-// In-memory access token store (hackathon — matches store.ts pattern)
+// File-backed access token store — persists across dev server restarts
 // In production, use encrypted database storage
-const accessTokens = new Map<string, string>();
+const TOKEN_FILE = join(process.cwd(), '.plaid-tokens.json');
+
+function loadTokens(): Record<string, string> {
+  try {
+    return JSON.parse(readFileSync(TOKEN_FILE, 'utf-8'));
+  } catch {
+    return {};
+  }
+}
+
+function saveTokens(tokens: Record<string, string>): void {
+  writeFileSync(TOKEN_FILE, JSON.stringify(tokens, null, 2));
+}
 
 export function setAccessToken(userId: string, token: string): void {
-  accessTokens.set(userId, token);
+  const tokens = loadTokens();
+  tokens[userId] = token;
+  saveTokens(tokens);
 }
 
 export function getAccessToken(userId: string): string | undefined {
-  return accessTokens.get(userId);
+  return loadTokens()[userId];
 }
 
 export function hasAccessToken(userId: string): boolean {
-  return accessTokens.has(userId);
+  return userId in loadTokens();
 }

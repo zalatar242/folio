@@ -42,10 +42,12 @@ export async function getStockPrice(symbol: string): Promise<PriceData> {
   try {
     // Dynamic import to avoid issues in browser bundles
     const yahooFinance = await import('yahoo-finance2');
-    const yf = yahooFinance.default;
+    const YF = yahooFinance.default;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const yf = new (YF as any)({ suppressNotices: ['yahooSurvey'] });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const quote: any = await (yf as any).quote(symbol);
+    const quote: any = await yf.quote(symbol);
 
     const data: PriceData = {
       symbol,

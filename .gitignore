@@ -8,3 +8,4 @@ out/
 .gstack/
 .vercel
 *.tsbuildinfo
+.plaid-tokens.json
