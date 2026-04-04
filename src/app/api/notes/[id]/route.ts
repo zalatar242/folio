@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getNote } from '@/lib/store';
+import { getNote } from '@/lib/spend-notes';
 import { verifyAuth, unauthorized } from '@/lib/auth';
 
 export async function GET(
@@ -10,7 +10,7 @@ export async function GET(
   if (!auth.authenticated) return unauthorized(auth.error);
 
   const { id } = await params;
-  const note = getNote(parseInt(id));
+  const note = await getNote(parseInt(id));
 
   if (!note) {
     return NextResponse.json({ error: 'Note not found' }, { status: 404 });
