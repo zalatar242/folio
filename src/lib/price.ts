@@ -84,11 +84,13 @@ export async function getAllPrices(
   symbols.forEach((symbol, i) => {
     const result = results[i];
     if (result.status === 'fulfilled') {
-      prices[symbol] = result.value;
+      // Skip unknown symbols that only got a zero-price generic fallback
+      if (result.value.price > 0 || FALLBACK_PRICES[symbol]) {
+        prices[symbol] = result.value;
+      }
     } else if (FALLBACK_PRICES[symbol]) {
       prices[symbol] = FALLBACK_PRICES[symbol];
     }
-    // If no fallback exists, symbol is simply omitted
   });
 
   return prices;
