@@ -334,7 +334,8 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
             type="text"
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
-            className="text-5xl font-bold text-center bg-transparent border-none outline-none w-48"
+            placeholder="0"
+            className="text-5xl font-bold text-center bg-transparent border-none outline-none w-48 placeholder:text-[var(--text-tertiary)]"
             style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums', caretColor: 'var(--accent)' }}
             inputMode="decimal"
           />
