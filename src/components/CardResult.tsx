@@ -129,12 +129,12 @@ export default function CardResult({ result, onViewNote, onViewCards, onViewCard
         </div>
       </div>
 
-      {/* Advance Summary */}
+      {/* Card Summary */}
       <div className="card p-5 text-left mb-6">
         <div className="flex flex-col gap-3">
           {[
             { label: 'Type', value: 'Prepaid Visa' },
-            { label: 'Collateral', value: `${formatShares(result.shares)} ${result.symbol}` },
+            { label: 'Backed by', value: `${formatShares(result.shares)} ${result.symbol}` },
             { label: 'Interest', value: '0%', accent: true },
             { label: 'Fees', value: '$0', accent: true },
           ].map((row) => (
