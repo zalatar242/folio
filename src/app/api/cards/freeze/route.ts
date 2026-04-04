@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { freezeCard, unfreezeCard } from '@/lib/lithic';
-import { getNotes } from '@/lib/store';
+import { getNotes } from '@/lib/spend-notes';
+import { supabase } from '@/lib/supabase';
 import { verifyAuth, unauthorized } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
 
     // Verify the authenticated user owns this card via their email → userAccountId mapping
     // In the in-memory store, notes are keyed by userAccountId which maps to the auth email
-    const allNotes = getNotes();
+    const allNotes = await getNotes();
     const ownerNote = allNotes.find(
       (n) => n.cardToken === cardToken
     );
@@ -41,8 +42,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update in-memory store
-    ownerNote.cardState = freeze ? 'PAUSED' : 'OPEN';
+    // Update card state in Supabase
+    await supabase
+      .from('spend_notes')
+      .update({ card_state: freeze ? 'PAUSED' : 'OPEN' })
+      .eq('id', ownerNote.id);
 
     return NextResponse.json({
       success: true,
