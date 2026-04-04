@@ -5,7 +5,7 @@ import { createPublicClient, http, parseAbi } from 'viem';
 import { baseSepolia } from 'viem/chains';
 
 const COLLAR_ORACLE_ABI = parseAbi([
-  'function getCollar(string symbol) external view returns (tuple(uint256 price, uint256 floor, uint256 cap, uint256 volatility, uint256 updatedAt))',
+  'function getCollar(string symbol) external view returns (uint256 price, uint256 floor, uint256 cap, uint256 volatility, uint256 updatedAt)',
   'function getLatestPrice(string symbol) external view returns (int256, uint256)',
 ]);
 
