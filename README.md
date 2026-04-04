@@ -1,36 +1,93 @@
-# Folio — Prime Broker in Your Pocket
+# Folio — 0% Loans Against Your Stocks
 
-> Goldman Sachs for everyone at 0%
+> Robinhood let everyone trade stocks. Folio lets everyone borrow against them — at 0% interest.
 
 ![Screenshot placeholder — add demo screenshot here](https://via.placeholder.com/800x450/0f1117/10B981?text=Folio+Demo)
 
-## What it does
+## The Problem
 
-- **Spend against your stock portfolio without selling** — tap to pay with your Tesla shares as collateral, keep your position
-- **Every purchase is backed by a collar (bounded risk)** — the platform hedges your collateral with a zero-cost options collar, so it can lend at 0% interest with no liquidation risk ever
-- **Each spend mints a "Spend Note" NFT** — a micro structured product on Hedera showing your collar band, advance amount, and expiry date
-- **No minimums, no margin calls, no liquidation risk** — Goldman Sachs requires $1M+, charges 2–4% interest, and can liquidate you; Folio requires nothing, charges 0%, and liquidation is mathematically impossible
+Americans have $30 trillion in brokerage accounts they can't spend. If you need cash, you either:
+
+1. **Sell your shares** — lose 20-37% to capital gains taxes, permanently exit your position
+2. **Take a margin loan** — pay 7-12% interest, risk margin calls and liquidation, need $500K+ at most brokerages
+
+Both options are terrible for a 28-year-old with $40K in Tesla who needs $500 for a dental bill.
+
+## What Folio Does
+
+**Folio gives you a 0% loan against your stock portfolio so you can spend your investments without selling them.**
+
+- **0% interest, always** — no spread, no hidden fees
+- **No minimums** — borrow against $100 or $100,000 in stocks
+- **No liquidation risk** — mathematically impossible, your downside is bounded
+- **No selling, no taxes** — your shares stay yours
+
+The only trade-off: your upside is temporarily capped while the loan is open (typically ~15% for 30 days). For someone spending $50 on groceries, that's invisible.
+
+## How It Works (for judges)
+
+When you spend $50 against $225 TSLA:
+
+1. Folio locks ~0.222 TSLA shares as collateral
+2. A protection range is set: floor at $213.75 (downside protected), ceiling at $258.75 (upside limited)
+3. You receive $50 USDC at 0% interest
+4. At expiry, repay $50 and get your shares back — or the shares settle the balance automatically
+
+The financial structure that makes 0% possible: a zero-cost options hedge that offsets borrowing cost by temporarily limiting upside. The premium from selling the upside pays for the downside protection. Net cost to the user: $0.
+
+## The Market
+
+Fidelity, Schwab, and Morgan Stanley all offer securities-backed lines of credit (SBLOCs). Every single one requires $500K+ in assets and charges 7-9% interest. Folio does the same thing for anyone, at 0%, from their phone.
 
 ## Architecture
 
 ```
-User (email login)
-      │
-      ▼
-Next.js Frontend
-      │
-      ▼
+User (email login via Dynamic)
+      |
+      v
+Next.js Frontend (Tailwind, App Router)
+      |
+      v
 API Routes (/api/spend, /api/price, /api/balance)
-      │           │
-      ▼           ▼
-Hedera HTS    Yahoo Finance
-(tokens +     (live stock
- NFT mints)    prices)
-      │
-      ▼
+      |               |                |
+      v               v                v
+Hedera HTS      Yahoo Finance    Chainlink Oracle
+(tokens +       (live stock      (on-chain price +
+ NFT mints)      prices)          volatility data)
+      |
+      v
 Pinata IPFS
 (Spend Note metadata)
 ```
+
+## Tech Stack
+
+- **Next.js 16** — App Router, TypeScript, Tailwind CSS
+- **Hedera HTS** — Fungible tokens (MOCK-TSLA, MOCK-AAPL, USDC-TEST) + NFT Spend Notes
+- **Chainlink** — CollarOracle on Base Sepolia reads Data Streams prices + DoltHub implied volatility via CRE workflow
+- **Dynamic** — Email-only authentication (no wallet UX)
+- **Yahoo Finance** — Real-time stock prices (fallback)
+- **Pinata** — IPFS metadata storage for Spend Note NFTs
+- **Vercel AI SDK** — AI-optimized protection parameters using real market volatility
+
+## Sponsor Integrations
+
+### Hedera
+
+- Creates and manages mock equity tokens (MOCK-TSLA, MOCK-AAPL) and USDC-TEST via HTS
+- Mints Spend Note NFTs with on-chain metadata pointing to IPFS
+- No Solidity — pure Hedera SDK
+
+### Chainlink
+
+- CollarOracle smart contract on Base Sepolia stores DON-verified price and volatility data
+- CRE workflow reads Chainlink Data Streams (real-time prices) and DoltHub (options implied volatility)
+- Folio reads on-chain parameters to set protection ranges using real market data
+
+### Dynamic
+
+- Email-only authentication (OTP) — no wallets, no MetaMask, no crypto UX
+- Powers the "sign in to spend" auth flow
 
 ## Quick Start
 
@@ -44,43 +101,6 @@ npm run setup     # Creates tokens on Hedera testnet
 npm run dev       # http://localhost:3000
 ```
 
-## Tech Stack
-
-- **Next.js 16** — App Router, TypeScript, Tailwind CSS
-- **Hedera HTS** — Fungible tokens (MOCK-TSLA, MOCK-AAPL, USDC-TEST) + NFT Spend Notes
-- **Dynamic** — Email-only authentication (no wallet UX)
-- **Yahoo Finance** — Real-time stock prices
-- **Pinata** — IPFS metadata storage for Spend Note NFTs
-
-## Sponsor Integrations
-
-### Hedera
-
-- Creates and manages mock equity tokens (MOCK-TSLA, MOCK-AAPL) and USDC-TEST via HTS
-- Mints Spend Note NFTs with on-chain metadata pointing to IPFS
-- No Solidity — pure Hedera SDK (eligible for "No Solidity Allowed" bounty)
-
-### Dynamic
-
-- Email-only authentication (OTP) — no wallets, no MetaMask, no crypto UX
-- Powers the "sign in to spend" auth flow
-
-## How the Collar Works
-
-When you spend $50 against $225 TSLA:
-
-- Platform locks ~0.222 TSLA shares as collateral
-- Floor = $213.75 (5% below) — platform's downside protection
-- Cap = $258.75 (15% above) — user's upside limit during loan
-- Platform advances $50 USDC at 0% interest
-- At expiry, user repays $50 and gets their shares back
-
-The put option (bought) protects against downside. The call option (sold) caps upside but pays for the put. Net premium to the user: ~$0. Because the collar bounds the downside, the platform can never lose money on the loan — that's why it's 0%.
-
 ## Team
 
 Solo build — ETHGlobal Cannes 2026, 36 hours.
-
-## Built at
-
-ETHGlobal Cannes 2026 — solo build, 36 hours
