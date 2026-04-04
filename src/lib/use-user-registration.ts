@@ -43,7 +43,7 @@ export function useUserRegistration() {
 
     register();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user?.email]);
 
   return { folioUser, registering };
 }
