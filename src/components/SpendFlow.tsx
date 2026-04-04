@@ -5,6 +5,7 @@ import type { PriceData, SpendResult } from '@/app/page';
 import type { Holding } from '@/lib/types';
 import { calculateCollar, formatShares, formatUsd, formatDate } from '@/lib/collar';
 import CollarGraph from '@/components/CollarGraph';
+import { useHederaKey } from '@/lib/use-hedera-key';
 
 export type SpendMode = 'send' | 'card';
 
@@ -21,7 +22,9 @@ interface SpendFlowProps {
 export default function SpendFlow({ mode, selectedHolding, holdings, prices, currentUserAccountId, onBack, onComplete }: SpendFlowProps) {
   const [amount, setAmount] = useState('50');
   const [sending, setSending] = useState(false);
+  const [sendStatus, setSendStatus] = useState<'idle' | 'preparing' | 'signing' | 'submitting'>('idle');
   const [sendError, setSendError] = useState('');
+  const { signTransaction } = useHederaKey();
   const [expandHow, setExpandHow] = useState(false);
   const [currentHolding, setCurrentHolding] = useState<Holding>(selectedHolding);
   const [showPicker, setShowPicker] = useState(false);
@@ -109,10 +112,40 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
     setSendError('');
 
     try {
-      const res = await fetch('/api/spend', {
+      // Step 1: Prepare — server builds unsigned collateral lock transaction
+      setSendStatus('preparing');
+      const prepRes = await fetch('/api/spend/prepare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          amount: val,
+          symbol,
+          durationMonths,
+          userAccountId: currentUserAccountId || 'demo-user',
+        }),
+      });
+
+      if (!prepRes.ok) {
+        const err = await prepRes.json().catch(() => ({}));
+        throw new Error(err.details || err.error || 'Failed to prepare transaction');
+      }
+
+      const prepData = await prepRes.json();
+      let signedCollateralTxBytes: string | undefined;
+
+      // Step 2: Sign — client signs the collateral lock with their private key
+      if (prepData.needsSignature && prepData.collateralLockTxBytes) {
+        setSendStatus('signing');
+        signedCollateralTxBytes = await signTransaction(prepData.collateralLockTxBytes);
+      }
+
+      // Step 3: Execute — server co-signs, submits, and does the rest
+      setSendStatus('submitting');
+      const execRes = await fetch('/api/spend/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          signedCollateralTxBytes,
           amount: val,
           symbol,
           durationMonths,
@@ -122,12 +155,12 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
         }),
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+      if (!execRes.ok) {
+        const err = await execRes.json().catch(() => ({}));
         throw new Error(err.details || err.error || 'Transaction failed');
       }
 
-      const data = await res.json();
+      const data = await execRes.json();
 
       onComplete({
         symbol,
@@ -145,6 +178,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
       setSendError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setSending(false);
+      setSendStatus('idle');
     }
   };
 
@@ -430,7 +464,10 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
         className="btn-primary w-full py-4 text-[15px]"
       >
         {sending
-          ? (mode === 'send' ? 'Sending...' : 'Issuing card...')
+          ? (sendStatus === 'preparing' ? 'Preparing...'
+            : sendStatus === 'signing' ? 'Signing...'
+            : sendStatus === 'submitting' ? 'Submitting...'
+            : 'Processing...')
           : (mode === 'send' ? `Send ${formatUsd(val)}` : `Get Card · ${formatUsd(val)} at 0%`)}
       </button>
     </div>

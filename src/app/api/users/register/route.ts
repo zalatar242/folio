@@ -9,7 +9,7 @@ const hederaConfigured = !!(
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, name } = await req.json();
+    const { email, name, publicKey } = await req.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Email required' }, { status: 400 });
@@ -22,13 +22,38 @@ export async function POST(req: NextRequest) {
     }
 
     let hederaAccountId = `0.0.${Date.now()}`; // Demo fallback
+    let tokenAssocTxBytes: string | undefined;
 
-    if (hederaConfigured) {
+    if (hederaConfigured && publicKey) {
+      // Non-custodial: create account with user's public key
+      const { createAccountWithPublicKey, prepareTokenAssociation } = await import('@/lib/hedera');
+      hederaAccountId = await createAccountWithPublicKey(publicKey);
+
+      // Prepare unsigned token association for client to sign
+      const tokenIds = ['TSLA', 'AAPL']
+        .map(getTokenIdForSymbol)
+        .filter(Boolean) as string[];
+
+      const usdcId = process.env.USDC_TEST_TOKEN_ID;
+      const noteId = process.env.SPEND_NOTE_TOKEN_ID;
+      if (usdcId) tokenIds.push(usdcId);
+      if (noteId) tokenIds.push(noteId);
+
+      if (tokenIds.length > 0) {
+        const txBytes = await prepareTokenAssociation(hederaAccountId, tokenIds);
+        // Base64-encode for JSON transport
+        let binary = '';
+        for (let i = 0; i < txBytes.length; i++) {
+          binary += String.fromCharCode(txBytes[i]);
+        }
+        tokenAssocTxBytes = Buffer.from(txBytes).toString('base64');
+      }
+    } else if (hederaConfigured) {
+      // Legacy custodial path (no publicKey provided)
       const { createAccount, associateTokens, transferToken } = await import('@/lib/hedera');
       const { accountId, privateKey } = await createAccount();
       hederaAccountId = accountId;
 
-      // Token association and funding are best-effort — don't block registration
       try {
         const tokenIds = ['TSLA', 'AAPL']
           .map(getTokenIdForSymbol)
@@ -43,10 +68,9 @@ export async function POST(req: NextRequest) {
           await associateTokens(hederaAccountId, tokenIds, privateKey);
         }
 
-        // Fund new account with USDC from treasury (demo: 500 USDC)
         if (usdcId) {
           const operatorId = process.env.HEDERA_OPERATOR_ID!;
-          const fundAmount = 500_000_000; // 500 USDC (6 decimals)
+          const fundAmount = 500_000_000;
           await transferToken(usdcId, operatorId, hederaAccountId, fundAmount);
         }
       } catch (tokenError) {
@@ -54,10 +78,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Always persist the user row — even if token setup failed above
-    const user = await registerUser(email, name || '', hederaAccountId);
+    const user = await registerUser(email, name || '', hederaAccountId, publicKey || undefined);
 
-    return NextResponse.json({ user, created: true });
+    return NextResponse.json({
+      user,
+      created: true,
+      tokenAssocTxBytes,
+      needsTokenAssociation: !!tokenAssocTxBytes,
+    });
   } catch (error) {
     console.error('User registration error:', error);
     return NextResponse.json(
