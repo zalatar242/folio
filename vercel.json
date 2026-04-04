@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/settle-expired",
-      "schedule": "0 */4 * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
