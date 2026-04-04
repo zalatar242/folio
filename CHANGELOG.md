@@ -2,6 +2,13 @@
 
 All notable changes to Folio will be documented in this file.
 
+## [0.2.0.1] - 2026-04-04
+
+### Fixed
+- Login screen now uses the app's green accent design system (was gray `bg-white/10`)
+- Added Folio "F" logo icon to login card to match sidebar branding
+- CollarGraph now shows the correct stock name instead of hardcoded "Tesla"
+
 ## [0.2.0.0] - 2026-04-04
 
 ### Changed

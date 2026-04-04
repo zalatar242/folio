@@ -239,7 +239,7 @@ export default function SpendFlow({ selectedHolding, prices, onBack, onComplete 
           </button>
           {expandHow && (
             <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--border)' }}>
-              <CollarGraph price={stockPrice || 225} floor={collar.floor} cap={collar.cap} />
+              <CollarGraph price={stockPrice || 225} floor={collar.floor} cap={collar.cap} stockName={stockName} />
               <div className="text-[13px] mt-4 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
                 This is a 0% interest loan backed by your {stockName} shares. We hold a small portion as collateral
                 and protect it with a zero-cost options collar (the green zone above). The recipient gets paid

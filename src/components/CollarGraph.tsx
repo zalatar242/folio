@@ -4,9 +4,10 @@ interface CollarGraphProps {
   price: number;
   floor: number;
   cap: number;
+  stockName?: string;
 }
 
-export default function CollarGraph({ price, floor, cap }: CollarGraphProps) {
+export default function CollarGraph({ price, floor, cap, stockName = 'stock' }: CollarGraphProps) {
   return (
     <div>
       <svg viewBox="0 0 340 180" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
@@ -58,10 +59,10 @@ export default function CollarGraph({ price, floor, cap }: CollarGraphProps) {
 
         {/* Scenario labels */}
         <text x="180" y="32" textAnchor="middle" fill="#10B981" fontSize="8.5" fontWeight="500" fontFamily="Inter,sans-serif" opacity="0.7">
-          If Tesla rises: capped at ${cap.toFixed(2)}
+          If {stockName} rises: capped at ${cap.toFixed(2)}
         </text>
         <text x="180" y="142" textAnchor="middle" fill="#EF4444" fontSize="8.5" fontWeight="500" fontFamily="Inter,sans-serif" opacity="0.7">
-          If Tesla drops: protected at ${floor.toFixed(2)}
+          If {stockName} drops: protected at ${floor.toFixed(2)}
         </text>
       </svg>
 
