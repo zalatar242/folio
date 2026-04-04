@@ -4,6 +4,7 @@ import { getStockPrice } from '@/lib/price';
 import { addNote } from '@/lib/store';
 import { issueVirtualCard } from '@/lib/lithic';
 import { getTokenIdForSymbol } from '@/lib/token-registry';
+import { verifyAuth, unauthorized } from '@/lib/auth';
 
 const hederaConfigured = !!(
   process.env.HEDERA_OPERATOR_ID &&
@@ -11,6 +12,9 @@ const hederaConfigured = !!(
 );
 
 export async function POST(req: NextRequest) {
+  const auth = await verifyAuth(req);
+  if (!auth.authenticated) return unauthorized(auth.error);
+
   try {
     const body = await req.json();
     const {
