@@ -169,7 +169,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
           amount: val,
           symbol,
           durationMonths,
-          userAccountId: currentUserAccountId || 'demo-user',
+          userAccountId: currentUserAccountId || '',
         }),
       });
 
@@ -199,7 +199,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
           durationMonths,
           issueCard: mode === 'card',
           recipientAccountId: mode === 'send' ? resolvedRecipientId : undefined,
-          userAccountId: currentUserAccountId || 'demo-user',
+          userAccountId: currentUserAccountId || '',
         }),
       });
 

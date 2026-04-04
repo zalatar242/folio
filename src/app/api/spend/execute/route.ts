@@ -195,7 +195,7 @@ export async function POST(req: NextRequest) {
     const note = await addNote({
       symbol,
       serial: hederaConfigured ? 1 : Date.now(),
-      recipient: recipientAccountId || userAccountId || 'demo-user',
+      recipient: recipientAccountId || userAccountId || 'unknown',
       recipientName: recipientAccountId || 'Virtual Card',
       amount: collar.advance,
       shares: collar.shares,
@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
       status: 'active',
       txId,
       createdAt: new Date().toISOString(),
-      userAccountId: userAccountId || 'demo-user',
+      userAccountId: userAccountId || '',
       recipientAccountId: recipientAccountId || undefined,
       cardToken,
       cardLastFour,
