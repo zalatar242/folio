@@ -29,15 +29,15 @@ export default function Portfolio({ prices, onSpend, onViewNotes }: PortfolioPro
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <div className="text-xs font-medium mb-2 uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+      <div className="mb-10">
+        <div className="text-xs font-medium mb-3 uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
           Total Portfolio
         </div>
-        <div className="text-[42px] font-bold tracking-tight leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
+        <div className="text-[44px] font-bold tracking-tight leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
           ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div className="flex items-center gap-1.5 mt-2">
-          <span className="text-sm font-semibold px-2 py-0.5 rounded-md"
+        <div className="flex items-center gap-2 mt-3">
+          <span className="text-sm font-semibold px-2.5 py-1 rounded-lg"
             style={{
               color: isPositive ? 'var(--positive)' : 'var(--negative)',
               background: isPositive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
@@ -49,21 +49,21 @@ export default function Portfolio({ prices, onSpend, onViewNotes }: PortfolioPro
       </div>
 
       {/* Quick Actions */}
-      <div className="flex gap-3 mb-8">
-        <button onClick={onSpend} className="btn-primary flex-1 py-3.5 text-sm">
+      <div className="flex gap-3 mb-10">
+        <button onClick={onSpend} className="btn-primary flex-1 py-4 text-[15px]">
           Send Payment
         </button>
-        <button onClick={onViewNotes} className="btn-secondary flex-1 py-3.5 text-sm">
+        <button onClick={onViewNotes} className="btn-secondary flex-1 py-4 text-[15px]">
           Spend Notes
         </button>
       </div>
 
       {/* Holdings */}
-      <div className="mb-6">
-        <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>
+      <div className="mb-8">
+        <div className="text-[11px] font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--text-tertiary)' }}>
           Holdings
         </div>
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-3">
           {HOLDINGS.map((h) => {
             const price = prices[h.symbol]?.price ?? 0;
             const change = prices[h.symbol]?.changePercent ?? 0;
@@ -71,14 +71,14 @@ export default function Portfolio({ prices, onSpend, onViewNotes }: PortfolioPro
             const isUp = change >= 0;
 
             return (
-              <div key={h.symbol} className="card flex items-center gap-3 p-4">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+              <div key={h.symbol} className="card flex items-center gap-4 p-5">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white"
                   style={{ background: h.gradient }}>
                   {h.icon}
                 </div>
                 <div className="flex-1">
                   <div className="text-[15px] font-semibold">{h.name}</div>
-                  <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
                     {h.shares} share{h.shares !== 1 ? 's' : ''}
                   </div>
                 </div>
@@ -86,7 +86,7 @@ export default function Portfolio({ prices, onSpend, onViewNotes }: PortfolioPro
                   <div className="text-[15px] font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>
                     ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
-                  <div className="text-xs font-medium" style={{ color: isUp ? 'var(--positive)' : 'var(--negative)' }}>
+                  <div className="text-xs font-medium mt-0.5" style={{ color: isUp ? 'var(--positive)' : 'var(--negative)' }}>
                     {isUp ? '+' : ''}{change.toFixed(2)}%
                   </div>
                 </div>
@@ -97,16 +97,16 @@ export default function Portfolio({ prices, onSpend, onViewNotes }: PortfolioPro
       </div>
 
       {/* Available to Spend */}
-      <div className="card p-5 relative overflow-hidden">
+      <div className="card p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-[0.04]"
           style={{ background: 'var(--accent)', filter: 'blur(40px)', transform: 'translate(30%, -30%)' }} />
-        <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-tertiary)' }}>
+        <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-tertiary)' }}>
           Available to Spend
         </div>
-        <div className="text-[28px] font-bold" style={{ color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>
+        <div className="text-[30px] font-bold" style={{ color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>
           ${(HOLDINGS[0].shares * (prices.TSLA?.price ?? 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
-        <div className="text-xs mt-1.5" style={{ color: 'var(--text-tertiary)' }}>
+        <div className="text-[13px] mt-2" style={{ color: 'var(--text-tertiary)' }}>
           From {HOLDINGS[0].shares} shares of Tesla at 0% interest
         </div>
       </div>
