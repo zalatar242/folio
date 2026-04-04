@@ -1,4 +1,4 @@
-# Folio — 0% Loans Against Your Stocks
+# Folio — 0% Interest Credit Line Backed by Your Stocks
 
 > Robinhood let everyone trade stocks. Folio lets everyone borrow against them — at 0% interest.
 

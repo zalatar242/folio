@@ -403,7 +403,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
               <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
             </svg>
           </div>
-          <div className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>0% interest loan from your portfolio</div>
+          <div className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>0% interest credit line backed by your stocks</div>
         </div>
 
         {/* Stat Grid */}
