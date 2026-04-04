@@ -22,7 +22,7 @@ Both options are terrible for a 28-year-old with $40K in Tesla who needs $500 fo
 - **No liquidation risk** — mathematically impossible, your downside is bounded
 - **No selling, no taxes** — your shares stay yours
 
-The only trade-off: your upside is temporarily capped while the loan is open (typically ~15% for 30 days). For someone spending $50 on groceries, that's invisible.
+The only trade-off: your upside is temporarily capped while the loan is open (typically ~115% for 30 days). For someone spending $50 on groceries, that's invisible.
 
 ## How It Works (for judges)
 

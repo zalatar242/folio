@@ -72,7 +72,10 @@ export async function GET(req: NextRequest) {
     } catch { /* spend_notes query failed, show all as USDC */ }
 
     const holdings = Array.from(balances.entries())
-      .filter(([tokenId]) => tokenMap.has(tokenId))
+      .filter(([tokenId]) => {
+        const entry = tokenMap.get(tokenId);
+        return entry && entry.type === 'crypto';
+      })
       .flatMap(([tokenId, rawBalance]) => {
         const entry = tokenMap.get(tokenId)!;
         const shares = rawBalance / 10 ** entry.decimals;
