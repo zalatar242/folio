@@ -31,7 +31,7 @@ export async function executeRepayment(
     const stockTokenId = getTokenIdForSymbol(note.symbol.replace('MOCK-', ''));
 
     // User sends USDC back to operator
-    const amountHts = Math.floor(note.amount * 1e6);
+    const amountHts = Math.round(note.amount * 1e6);
     await transferToken(usdcTokenId, userAccountId, operatorId, amountHts);
 
     // Operator returns all collateral shares to user
