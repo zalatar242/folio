@@ -216,9 +216,9 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
           {note.status === 'repaid'
             ? 'Advance settled. Your shares have been unlocked and returned.'
             : note.status === 'settled'
-            ? 'Collar expired and settled. Remaining shares have been returned to your account.'
+            ? 'Loan expired and settled. Remaining shares have been returned to your account.'
             : note.status === 'liquidated'
-            ? 'Collar expired below the floor. All collateral was liquidated to cover the advance.'
+            ? 'Loan expired below the protection floor. All collateral was used to cover the advance.'
             : note.status === 'expired'
             ? 'Advance expired. Collateral shares were sold to cover the balance.'
             : `Settle ${formatUsd(note.amount)} before ${formatDate(expiry)} to unlock your shares.`}
