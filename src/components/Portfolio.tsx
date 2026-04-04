@@ -6,6 +6,7 @@ import type { PlaidStatus } from '@/lib/use-plaid-holdings';
 
 interface PortfolioProps {
   holdings: Holding[];
+  cryptoHoldings: Holding[];
   prices: Record<string, PriceData>;
   plaidStatus: PlaidStatus;
   isPlaidAvailable: boolean;
@@ -18,6 +19,7 @@ interface PortfolioProps {
 
 export default function Portfolio({
   holdings,
+  cryptoHoldings,
   prices,
   plaidStatus,
   isPlaidAvailable,
@@ -29,10 +31,16 @@ export default function Portfolio({
 }: PortfolioProps) {
   const visibleHoldings = holdings.filter((h) => h.shares > 0);
 
+  // Crypto holdings value (USDC = $1 each)
+  const cryptoValue = cryptoHoldings.reduce((sum, h) => {
+    if (h.symbol === 'USDC') return sum + h.shares; // 1:1 USD
+    return sum;
+  }, 0);
+
   const totalValue = holdings.reduce((sum, h) => {
     const price = prices[h.symbol]?.price ?? 0;
     return sum + h.shares * price;
-  }, 0);
+  }, 0) + cryptoValue;
 
   const totalChange = holdings.reduce((sum, h) => {
     const change = prices[h.symbol]?.change ?? 0;
@@ -156,6 +164,55 @@ export default function Portfolio({
           </div>
         )}
       </div>
+
+      {/* Crypto Holdings */}
+      {cryptoHoldings.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+              Crypto
+            </div>
+            <div className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(39,117,202,0.1)', color: '#2775CA' }}>
+              Hedera
+            </div>
+          </div>
+          <div className="space-y-3">
+            {cryptoHoldings.map((h) => {
+              const isUsdc = h.symbol === 'USDC';
+              const value = isUsdc ? h.shares : 0;
+
+              return (
+                <button
+                  key={h.symbol}
+                  onClick={() => onSpendFromHolding(h)}
+                  className="w-full card flex items-center gap-4 p-5 text-left transition-all"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                    style={{ background: h.gradient }}>
+                    {h.icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-[15px] font-semibold">{h.name}</div>
+                    <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                      {isUsdc
+                        ? `${h.shares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC`
+                        : `${h.shares} ${h.symbol}`
+                      }
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[15px] font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                      ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Available to Spend */}
       {hasHoldings && (

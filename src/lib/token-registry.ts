@@ -17,6 +17,7 @@ export interface TokenEntry {
   tokenId: string;          // HTS token ID (0.0.XXXXX)
   decimals: number;
   provider: 'mock' | 'swarm'; // mock = testnet demo, swarm = production
+  type: 'stock' | 'crypto';
 }
 
 // Build registry from env vars
@@ -31,6 +32,7 @@ export function getTokenRegistry(): TokenEntry[] {
       tokenId: process.env.MOCK_TSLA_TOKEN_ID,
       decimals: 6,
       provider: 'mock',
+      type: 'stock',
     });
   }
 
@@ -41,6 +43,18 @@ export function getTokenRegistry(): TokenEntry[] {
       tokenId: process.env.MOCK_AAPL_TOKEN_ID,
       decimals: 6,
       provider: 'mock',
+      type: 'stock',
+    });
+  }
+
+  if (process.env.USDC_TEST_TOKEN_ID) {
+    entries.push({
+      symbol: 'USDC',
+      name: 'USD Coin',
+      tokenId: process.env.USDC_TEST_TOKEN_ID,
+      decimals: 6,
+      provider: 'mock',
+      type: 'crypto',
     });
   }
 

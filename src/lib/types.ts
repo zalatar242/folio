@@ -6,6 +6,7 @@ export interface Holding {
   shares: number;
   icon: string;
   gradient: string;
+  type?: 'stock' | 'crypto'; // defaults to 'stock'
 }
 
 export const SYMBOL_GRADIENTS: Record<string, string> = {

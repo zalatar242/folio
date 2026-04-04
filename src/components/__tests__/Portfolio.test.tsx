@@ -18,6 +18,7 @@ const mockPrices = {
 
 const defaultProps = {
   holdings: mockHoldings,
+  cryptoHoldings: [],
   prices: mockPrices,
   plaidStatus: 'connected' as const,
   isPlaidAvailable: true,

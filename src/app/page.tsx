@@ -58,7 +58,8 @@ export default function Home() {
   const [spendMode, setSpendMode] = useState<SpendMode>('send');
 
   const { status: plaidStatus, holdings, openLink, isPlaidAvailable, isDemo } = usePlaidHoldings();
-  useUserRegistration(); // Auto-creates Hedera account on first login
+  const { folioUser } = useUserRegistration(); // Auto-creates Hedera account on first login
+  const [cryptoHoldings, setCryptoHoldings] = useState<Holding[]>([]);
 
   const navMap: Record<Screen, string> = {
     portfolio: 'portfolio',
@@ -99,6 +100,26 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [fetchPrices]);
 
+  // Fetch user's on-chain token balances (USDC, stocks, etc.)
+  useEffect(() => {
+    if (!folioUser?.hederaAccountId) return;
+    let cancelled = false;
+
+    async function fetchCryptoBalances() {
+      try {
+        const res = await fetch(`/api/users/balances?accountId=${folioUser!.hederaAccountId}`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setCryptoHoldings(data.holdings || []);
+        }
+      } catch { /* ignore */ }
+    }
+
+    fetchCryptoBalances();
+    const interval = setInterval(fetchCryptoBalances, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [folioUser]);
+
   const handleViewHolding = (holding: Holding) => {
     setSelectedHolding(holding);
     setScreen('stock-detail');
@@ -130,6 +151,7 @@ export default function Home() {
           {screen === 'portfolio' && (
             <Portfolio
               holdings={holdings}
+              cryptoHoldings={cryptoHoldings}
               prices={prices}
               plaidStatus={plaidStatus}
               isPlaidAvailable={isPlaidAvailable}

@@ -11,12 +11,16 @@ interface StockDetailProps {
 }
 
 export default function StockDetail({ holding, price, onBack, onSpend }: StockDetailProps) {
-  const stockPrice = price?.price ?? 0;
-  const change = price?.change ?? 0;
-  const changePercent = price?.changePercent ?? 0;
+  const isCrypto = holding.type === 'crypto';
+  const isUsdc = holding.symbol === 'USDC';
+
+  // For crypto stablecoins, price is $1. For stocks, use price API.
+  const unitPrice = isCrypto ? (isUsdc ? 1 : 0) : (price?.price ?? 0);
+  const change = isCrypto ? 0 : (price?.change ?? 0);
+  const changePercent = isCrypto ? 0 : (price?.changePercent ?? 0);
   const isUp = change >= 0;
-  const totalValue = holding.shares * stockPrice;
-  const priceLoaded = price !== undefined;
+  const totalValue = holding.shares * unitPrice;
+  const priceLoaded = isCrypto || price !== undefined;
 
   return (
     <div className="space-y-8">
@@ -30,7 +34,7 @@ export default function StockDetail({ holding, price, onBack, onSpend }: StockDe
         </button>
       </div>
 
-      {/* Stock Identity */}
+      {/* Identity */}
       <div className="flex items-center gap-4">
         <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white"
           style={{ background: holding.gradient }}>
@@ -42,36 +46,52 @@ export default function StockDetail({ holding, price, onBack, onSpend }: StockDe
         </div>
       </div>
 
-      {/* Price */}
+      {/* Price / Balance */}
       <div>
-        <div className="text-[40px] font-bold tracking-tight leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
-          {priceLoaded ? `$${stockPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '···'}
-        </div>
-        {priceLoaded && (
-          <div className="flex items-center gap-2 mt-3">
-            <span className="text-sm font-semibold px-2.5 py-1 rounded-lg"
-              style={{
-                color: isUp ? 'var(--positive)' : 'var(--negative)',
-                background: isUp ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-              }}>
-              {isUp ? '+' : ''}{change.toFixed(2)} ({isUp ? '+' : ''}{changePercent.toFixed(2)}%)
-            </span>
-            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>today</span>
-          </div>
+        {isCrypto ? (
+          <>
+            <div className="text-[40px] font-bold tracking-tight leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="text-sm mt-3" style={{ color: 'var(--text-tertiary)' }}>
+              {holding.shares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {holding.symbol}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-[40px] font-bold tracking-tight leading-none" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {priceLoaded ? `$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '···'}
+            </div>
+            {priceLoaded && (
+              <div className="flex items-center gap-2 mt-3">
+                <span className="text-sm font-semibold px-2.5 py-1 rounded-lg"
+                  style={{
+                    color: isUp ? 'var(--positive)' : 'var(--negative)',
+                    background: isUp ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                  }}>
+                  {isUp ? '+' : ''}{change.toFixed(2)} ({isUp ? '+' : ''}{changePercent.toFixed(2)}%)
+                </span>
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>today</span>
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Position Details */}
       <div className="card p-6 space-y-0">
         <div className="text-[11px] font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--text-tertiary)' }}>
-          Your Position
+          {isCrypto ? 'Balance' : 'Your Position'}
         </div>
-        {[
-          { label: 'Shares', value: holding.shares.toString() },
-          { label: 'Avg Price', value: '—' },
+        {(isCrypto ? [
+          { label: 'Balance', value: `${holding.shares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${holding.symbol}` },
+          { label: 'Value', value: `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
+          { label: 'Network', value: 'Hedera Testnet' },
+        ] : [
+          { label: 'Shares', value: holding.shares.toLocaleString() },
+          { label: 'Price per Share', value: priceLoaded ? `$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '···' },
           { label: 'Market Value', value: priceLoaded ? `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '···' },
-          { label: 'Portfolio Weight', value: '—' },
-        ].map((row, i, arr) => (
+        ]).map((row, i, arr) => (
           <div key={row.label} className="flex justify-between py-3.5 text-[14px]"
             style={i < arr.length - 1 ? { borderBottom: '1px solid var(--border)' } : undefined}>
             <span style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
@@ -80,9 +100,9 @@ export default function StockDetail({ holding, price, onBack, onSpend }: StockDe
         ))}
       </div>
 
-      {/* Spend Button */}
+      {/* Action Button */}
       <button onClick={onSpend} className="btn-primary w-full py-4 text-[15px]">
-        Spend from {holding.name}
+        {isCrypto ? `Send ${holding.symbol}` : `Spend from ${holding.name}`}
       </button>
     </div>
   );
