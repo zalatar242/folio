@@ -48,7 +48,7 @@ export async function getChainlinkCollar(symbol: string): Promise<ChainlinkColla
     const [price, floor, cap, volatility, updatedAt] = result as [bigint, bigint, bigint, bigint, bigint];
 
     // Skip if no data (price = 0 means never written)
-    if (price === 0n) return null;
+    if (price === BigInt(0)) return null;
 
     return {
       symbol,
