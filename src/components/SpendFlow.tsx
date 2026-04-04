@@ -41,24 +41,17 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
   const [aiCollar, setAiCollar] = useState<{ floorPct: number; capPct: number; durationMonths: number; confidence: number; reasoning: string; riskLevel: string; warnings: string[] } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
 
-  const isValidAccountId = /^0\.0\.\d{1,10}$/.test(recipientInput.trim());
   const hasRecipient = mode === 'card' || !!recipientAccountId;
   const resolvedRecipientId = recipientAccountId;
 
-  // Verify recipient as they type (email or account ID)
+  // Verify recipient email as they type
   useEffect(() => {
     if (mode !== 'send' || recipientAccountId) return;
     clearTimeout(verifyTimeout.current);
     const input = recipientInput.trim();
 
-    if (input.length < 2) {
+    if (!input || !input.includes('@')) {
       setVerifyStatus('idle');
-      return;
-    }
-
-    // Self-send check for raw account ID
-    if (isValidAccountId && currentUserAccountId && input === currentUserAccountId) {
-      setVerifyStatus('self');
       return;
     }
 
@@ -69,37 +62,28 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
         const data = await res.json();
         const users: { email: string; name: string; hederaAccountId: string }[] = data.users || [];
 
-        // Filter out self
-        const others = users.filter((u) => u.hederaAccountId !== currentUserAccountId);
-
-        // Find exact match (email or account ID)
-        const match = others.find(
-          (u) => u.email.toLowerCase() === input.toLowerCase() || u.hederaAccountId === input
+        // Filter out self and find exact email match
+        const match = users.find(
+          (u) => u.email.toLowerCase() === input.toLowerCase() && u.hederaAccountId !== currentUserAccountId
         );
 
         if (match) {
           setRecipientAccountId(match.hederaAccountId);
           setRecipientName(match.name || match.email);
           setVerifyStatus('found');
-        } else if (isValidAccountId) {
-          // Valid account ID format but not a known Folio user — allow it
-          setRecipientAccountId(input);
-          setRecipientName('');
-          setVerifyStatus('found');
         } else {
-          setVerifyStatus('not-found');
+          // Check if they tried their own email
+          const self = users.find(
+            (u) => u.email.toLowerCase() === input.toLowerCase() && u.hederaAccountId === currentUserAccountId
+          );
+          setVerifyStatus(self ? 'self' : 'not-found');
         }
       } catch {
-        if (isValidAccountId) {
-          setRecipientAccountId(input);
-          setVerifyStatus('found');
-        } else {
-          setVerifyStatus('not-found');
-        }
+        setVerifyStatus('not-found');
       }
     }, 500);
     return () => clearTimeout(verifyTimeout.current);
-  }, [recipientInput, mode, recipientAccountId, isValidAccountId, currentUserAccountId]);
+  }, [recipientInput, mode, recipientAccountId, currentUserAccountId]);
 
   // Debounced AI collar optimization — non-blocking enhancement
   useEffect(() => {
@@ -306,7 +290,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
                       setRecipientName('');
                       setVerifyStatus('idle');
                     }}
-                    placeholder="Email or account ID (0.0.12345)"
+                    placeholder="name@example.com"
                     className="w-full bg-transparent border-none outline-none text-[15px] font-semibold"
                     style={{ color: 'var(--text-primary)', caretColor: 'var(--accent)' }}
                   />
@@ -318,7 +302,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
                     {verifyStatus === 'checking' && 'Verifying...'}
                     {verifyStatus === 'self' && "You can't send to yourself"}
                     {verifyStatus === 'not-found' && 'No user found with that email'}
-                    {verifyStatus === 'idle' && 'Enter recipient email or Hedera account ID'}
+                    {verifyStatus === 'idle' && 'Enter their email address'}
                   </div>
                 </div>
               </div>
