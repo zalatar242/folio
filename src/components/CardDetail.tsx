@@ -274,7 +274,7 @@ export default function CardDetail({ noteId, onBack }: CardDetailProps) {
         </div>
       </div>
 
-      {/* Collar Details */}
+      {/* Protection Range */}
       <div className="card p-5 mb-4">
         <div className="text-[11px] font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--text-tertiary)' }}>
           Protection Range

@@ -7,8 +7,8 @@ const geist = Geist({ subsets: ['latin'], variable: '--font-geist' });
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
 
 export const metadata: Metadata = {
-  title: "Folio — Prime Broker in Your Pocket",
-  description: "Spend against your portfolio at 0% interest. No selling, no margin calls.",
+  title: "Folio — 0% Loans Against Your Stocks",
+  description: "Spend your stock portfolio without selling. 0% interest, no minimums, no liquidation risk.",
 };
 
 export default function RootLayout({

@@ -531,8 +531,8 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
                 <p>
                   <strong style={{ color: 'var(--text-secondary)' }}>You&apos;re protected.</strong>{' '}
                   If {stockName} drops below ${effectiveFloor.toFixed(0)}, we absorb the loss. If it rises
-                  above ${effectiveCap.toFixed(0)}, you give up gains beyond that. This is a{' '}
-                  <em>zero-cost collar</em> — the cap is the cost of protection.
+                  above ${effectiveCap.toFixed(0)}, you give up gains beyond that. The upside limit is
+                  what makes the 0% interest possible.
                 </p>
                 <p>
                   <strong style={{ color: 'var(--text-secondary)' }}>Repay anytime</strong> before {formatDate(collar.expiryDate)} and
