@@ -199,6 +199,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
           durationMonths,
           issueCard: mode === 'card',
           recipientAccountId: mode === 'send' ? resolvedRecipientId : undefined,
+          recipientName: mode === 'send' ? (recipientName || undefined) : undefined,
           userAccountId: currentUserAccountId || '',
         }),
       });
@@ -263,9 +264,9 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[15px] font-semibold truncate">{recipientName || recipientAccountId}</div>
-                <div className="text-[11px] mt-0.5 font-mono truncate" style={{ color: 'var(--text-tertiary)' }}>
-                  {recipientAccountId}
+                <div className="text-[15px] font-semibold truncate">{recipientName || recipientInput}</div>
+                <div className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--text-tertiary)' }}>
+                  Verified recipient
                 </div>
               </div>
               <button onClick={() => {

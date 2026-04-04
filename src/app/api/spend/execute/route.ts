@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
       durationMonths,  // optional — AI will recommend if not provided
       issueCard = false,
       recipientAccountId,
+      recipientName: clientRecipientName,
       userAccountId,
       portfolioShares,
       riskPreference,
@@ -196,7 +197,7 @@ export async function POST(req: NextRequest) {
       symbol,
       serial: hederaConfigured ? 1 : Date.now(),
       recipient: recipientAccountId || userAccountId || 'unknown',
-      recipientName: recipientAccountId || 'Virtual Card',
+      recipientName: clientRecipientName || (issueCard ? 'Virtual Card' : 'Unknown'),
       amount: collar.advance,
       shares: collar.shares,
       sharesHts: collar.sharesHts,

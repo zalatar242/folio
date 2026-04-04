@@ -135,7 +135,7 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <div className="text-lg font-semibold">Transaction #{note.id}</div>
+        <div className="text-lg font-semibold">Transaction</div>
       </div>
 
       {/* Recipient + Amount */}
@@ -225,9 +225,17 @@ export default function NoteDetail({ noteId, onBack }: NoteDetailProps) {
         </div>
       </div>
 
-      {/* TX ID */}
-      <div className="text-[11px] mb-8 font-mono px-1" style={{ color: 'var(--text-tertiary)' }}>
-        TX: {note.txId}
+      {/* TX verification link */}
+      <div className="text-[11px] mb-8 px-1">
+        <a
+          href={`https://hashscan.io/testnet/transaction/${note.txId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
+          Verify on Hedera Testnet
+        </a>
       </div>
 
       {/* Repay Button */}
