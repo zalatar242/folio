@@ -86,29 +86,7 @@ export default function Portfolio({
           )}
         </div>
 
-        {plaidStatus === 'idle' && isPlaidAvailable && isDemo ? (
-          /* Connect Brokerage Card */
-          <button
-            onClick={onConnectBrokerage}
-            className="w-full card p-6 text-left cursor-pointer transition-all"
-            style={{ border: '1.5px dashed rgba(255,255,255,0.12)' }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-11 h-11 rounded-full flex items-center justify-center"
-                style={{ background: 'var(--accent-muted)' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-              </div>
-              <div>
-                <div className="text-[15px] font-semibold">Connect Brokerage</div>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                  Link your account to see real positions
-                </div>
-              </div>
-            </div>
-          </button>
-        ) : plaidStatus === 'loading' ? (
+        {plaidStatus === 'loading' ? (
           <div className="card p-6 text-center">
             <div className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Loading holdings...</div>
           </div>
@@ -149,6 +127,30 @@ export default function Portfolio({
                 </button>
               );
             })}
+
+            {/* Connect Brokerage */}
+            {plaidStatus === 'idle' && isPlaidAvailable && isDemo && (
+              <button
+                onClick={onConnectBrokerage}
+                className="w-full card p-5 text-left cursor-pointer transition-all"
+                style={{ border: '1.5px dashed rgba(255,255,255,0.12)' }}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center"
+                    style={{ background: 'var(--accent-muted)' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-[15px] font-semibold">Connect Brokerage</div>
+                    <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                      Link your account to see real positions
+                    </div>
+                  </div>
+                </div>
+              </button>
+            )}
           </div>
         )}
       </div>
