@@ -13,7 +13,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
     }
 
-    const secret = process.env.DYNAMIC_WEBHOOK_SECRET!;
+    const secret = process.env.DYNAMIC_WEBHOOK_SECRET;
+    if (!secret) {
+      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+    }
     const expectedSignature = crypto
       .createHmac('sha256', secret)
       .update(rawBody)
