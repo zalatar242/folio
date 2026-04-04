@@ -2,6 +2,11 @@
 
 All notable changes to Folio will be documented in this file.
 
+## [0.2.0.3] - 2026-04-04
+
+### Fixed
+- Portfolio page now shows individual holdings (TSLA, AAPL) instead of hiding them behind a "Connect Brokerage" button when Plaid is available in demo mode
+
 ## [0.3.0.0] - 2026-04-04
 
 ### Added
