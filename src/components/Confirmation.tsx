@@ -57,32 +57,37 @@ export default function Confirmation({ result, onViewDetails, onDone }: Confirma
         </div>
       </div>
 
-      {/* AI Insights */}
+      {/* Protection Summary */}
       {result.ai && (
         <div className="card p-5 text-left mb-8">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'var(--accent-muted)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
-                <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z" />
-                <path d="M16 14a4 4 0 0 0-8 0v3a4 4 0 0 0 8 0v-3z" />
-                <line x1="12" y1="8" x2="12" y2="14" />
-              </svg>
-            </div>
+          <div className="flex items-center gap-2 mb-4">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
             <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-              AI Collar Analysis
+              Protection
             </div>
             <div className="ml-auto text-[11px] font-medium px-2 py-0.5 rounded-full" style={{
-              background: result.ai.confidence > 0.7 ? 'var(--accent-muted)' : 'var(--bg-elevated)',
-              color: result.ai.confidence > 0.7 ? 'var(--accent)' : 'var(--text-tertiary)',
+              background: result.ai.riskLevel === 'conservative' ? 'rgba(16,185,129,0.1)'
+                : result.ai.riskLevel === 'aggressive' ? 'rgba(239,68,68,0.1)'
+                : 'rgba(59,130,246,0.1)',
+              color: result.ai.riskLevel === 'conservative' ? 'var(--accent)'
+                : result.ai.riskLevel === 'aggressive' ? 'var(--negative)'
+                : '#3B82F6',
             }}>
-              {Math.round(result.ai.confidence * 100)}% confidence
+              {result.ai.riskLevel === 'conservative' ? 'Conservative' : result.ai.riskLevel === 'aggressive' ? 'Aggressive' : 'Balanced'}
             </div>
           </div>
-          <div className="text-[13px] leading-relaxed mb-2" style={{ color: 'var(--text-secondary)' }}>
-            {result.ai.reasoning}
+          <div className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Your {result.symbol} collateral is protected against downside drops.
+            {result.ai.riskLevel === 'conservative'
+              ? ' Wide protection range — lower risk to your shares.'
+              : result.ai.riskLevel === 'aggressive'
+              ? ' Tighter protection — more upside potential but less cushion.'
+              : ' Balanced protection between safety and upside.'}
           </div>
           {result.ai.warnings.length > 0 && (
-            <div className="space-y-1 mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+            <div className="space-y-1.5 mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
               {result.ai.warnings.map((w, i) => (
                 <div key={i} className="text-[12px] flex items-start gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
                   <span style={{ color: '#F59E0B' }}>!</span> {w}

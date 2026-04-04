@@ -95,7 +95,7 @@ async function aiOptimize(
   context: OptimizationContext,
   volData: Awaited<ReturnType<typeof getVolatilityData>>
 ): Promise<CollarRecommendation> {
-  const { generateText, Output } = await import('ai');
+  const { generateText } = await import('ai');
   const { createOpenAICompatible } = await import('@ai-sdk/openai-compatible');
 
   const minimax = createOpenAICompatible({
@@ -149,23 +149,44 @@ QUANTITATIVE APPROACH:
 3. Cap should be set so the collar is zero-cost: typically 1.2-2.0x the floor width
 4. Adjust for portfolio concentration, market sentiment, and user preference
 
-Return optimized parameters with your reasoning.`;
+Return ONLY a raw JSON object (no markdown, no code fences, no explanation outside the JSON) with these exact fields:
+{
+  "floorPct": <number 0.01-0.30>,
+  "capPct": <number 0.05-0.50>,
+  "durationMonths": <integer 1-6>,
+  "confidence": <number 0-1>,
+  "reasoning": "<string>",
+  "riskLevel": "<conservative|moderate|aggressive>",
+  "warnings": ["<string>", ...]
+}`;
 
-  const { output } = await generateText({
+  const { text } = await generateText({
     model: minimax('MiniMax-M1'),
-    output: Output.object({ schema: CollarRecommendationSchema }),
     prompt,
   });
 
-  if (!output) {
+  // Extract JSON from response (model may wrap in markdown code fences)
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.warn('AI optimizer returned no JSON, falling back to quantitative');
     return quantitativeOptimize(context, volData);
   }
 
+  const raw = JSON.parse(jsonMatch[0]);
+
+  // Clamp values before Zod validation — LLM often returns out-of-range numbers
+  raw.floorPct = Math.max(0.01, Math.min(0.30, Number(raw.floorPct) || 0.10));
+  raw.capPct = Math.max(0.05, Math.min(0.50, Number(raw.capPct) || 0.20));
+  raw.durationMonths = Math.max(1, Math.min(6, Math.round(Number(raw.durationMonths) || 1)));
+  raw.confidence = Math.max(0, Math.min(1, Number(raw.confidence) || 0.7));
+
+  const parsed = CollarRecommendationSchema.parse(raw);
+
   return {
-    ...output,
-    floorPct: Math.max(0.03, Math.min(0.25, output.floorPct)),
-    capPct: Math.max(0.05, Math.min(0.40, output.capPct)),
-    durationMonths: Math.max(1, Math.min(6, output.durationMonths)),
+    ...parsed,
+    floorPct: Math.max(0.03, Math.min(0.25, parsed.floorPct)),
+    capPct: Math.max(0.05, Math.min(0.40, parsed.capPct)),
+    durationMonths: Math.max(1, Math.min(6, parsed.durationMonths)),
   };
 }
 

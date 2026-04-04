@@ -15,6 +15,7 @@ interface PortfolioProps {
   onSpendFromHolding: (holding: Holding) => void;
   onSpend: () => void;
   onViewNotes: () => void;
+  onViewCards: () => void;
 }
 
 export default function Portfolio({
@@ -28,12 +29,13 @@ export default function Portfolio({
   onSpendFromHolding,
   onSpend,
   onViewNotes,
+  onViewCards,
 }: PortfolioProps) {
   const visibleHoldings = holdings.filter((h) => h.shares > 0);
 
-  // Crypto holdings value (USDC = $1 each)
+  // Crypto holdings value (USDC and CARDS = $1 each)
   const cryptoValue = cryptoHoldings.reduce((sum, h) => {
-    if (h.symbol === 'USDC') return sum + h.shares; // 1:1 USD
+    if (h.symbol === 'USDC' || h.symbol === 'CARDS') return sum + h.shares;
     return sum;
   }, 0);
 
@@ -189,8 +191,8 @@ export default function Portfolio({
         )}
       </div>
 
-      {/* Crypto Holdings */}
-      {cryptoHoldings.length > 0 && (
+      {/* Crypto Holdings (exclude CARDS — shown in own section) */}
+      {cryptoHoldings.filter((h) => h.symbol !== 'CARDS').length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-4">
             <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
@@ -202,7 +204,7 @@ export default function Portfolio({
             </div>
           </div>
           <div className="space-y-3">
-            {cryptoHoldings.map((h) => {
+            {cryptoHoldings.filter((h) => h.symbol !== 'CARDS').map((h) => {
               const isUsdc = h.symbol === 'USDC';
               const value = isUsdc ? h.shares : 0;
 
@@ -234,6 +236,50 @@ export default function Portfolio({
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Virtual Cards */}
+      {cryptoHoldings.filter((h) => h.symbol === 'CARDS').length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+              Cards
+            </div>
+            <div className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(139,92,246,0.1)', color: '#8B5CF6' }}>
+              Virtual
+            </div>
+          </div>
+          <div className="space-y-3">
+            {cryptoHoldings.filter((h) => h.symbol === 'CARDS').map((h) => (
+              <button
+                key={h.symbol}
+                onClick={() => onViewCards()}
+                className="w-full card flex items-center gap-4 p-5 text-left transition-all"
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold"
+                  style={{ background: h.gradient, color: 'white' }}>
+                  {h.icon}
+                </div>
+                <div className="flex-1">
+                  <div className="text-[15px] font-semibold">{h.name}</div>
+                  <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                    ${h.shares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} loaded
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[15px] font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    ${h.shares.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                    View cards
+                  </div>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       )}

@@ -27,6 +27,7 @@ const defaultProps = {
   onSpendFromHolding: jest.fn(),
   onSpend: jest.fn(),
   onViewNotes: jest.fn(),
+  onViewCards: jest.fn(),
 };
 
 describe('Portfolio', () => {

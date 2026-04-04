@@ -474,17 +474,47 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
               {formatShares(collar.shares)} {symbol} ({formatUsd(collar.collateralValue)})
             </span>
           </div>
-          {/* AI status indicator */}
-          {aiLoading && (
-            <div className="h-3 w-24 rounded" style={{ background: 'linear-gradient(90deg, var(--bg-elevated) 25%, var(--border) 50%, var(--bg-elevated) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
-          )}
-          {!aiLoading && aiCollar && aiCollar.confidence > 0.7 && (
-            <div style={{ color: 'rgba(16,185,129,0.6)', fontSize: '12px' }}>AI-optimized</div>
-          )}
-          {!aiLoading && aiCollar && aiCollar.confidence <= 0.7 && (
-            <div style={{ color: '#71717A', fontSize: '12px' }}>Estimated</div>
-          )}
         </div>
+
+        {/* Protection Range */}
+        {val > 0 && (
+          <div className="p-4 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+                Your Protection
+              </span>
+              {aiLoading && (
+                <div className="h-3 w-16 rounded ml-auto" style={{ background: 'linear-gradient(90deg, var(--bg-elevated) 25%, var(--border) 50%, var(--bg-elevated) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-[11px] mb-1" style={{ color: 'var(--text-tertiary)' }}>If {symbol} drops</div>
+                <div className="text-[15px] font-semibold" style={{ color: '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
+                  Protected below ${effectiveFloor.toFixed(2)}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] mb-1" style={{ color: 'var(--text-tertiary)' }}>If {symbol} rises</div>
+                <div className="text-[15px] font-semibold" style={{ color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>
+                  Capped at ${effectiveCap.toFixed(2)}
+                </div>
+              </div>
+            </div>
+            {aiCollar && aiCollar.warnings.length > 0 && (
+              <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                {aiCollar.warnings.map((w, i) => (
+                  <div key={i} className="text-[12px] flex items-start gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
+                    <span style={{ color: '#F59E0B' }}>!</span> {w}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Repayment Note */}
         <div className="text-[12px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
@@ -506,31 +536,24 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
             How does this work?
           </button>
           {expandHow && (
-            <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--border)' }}>
+            <div className="mt-5 pt-5 space-y-4" style={{ borderTop: '1px solid var(--border)' }}>
               <CollarGraph price={stockPrice || 225} floor={effectiveFloor} cap={effectiveCap} stockName={stockName} />
-              {aiCollar ? (
-                <div className="mt-4 space-y-2">
-                  <div className="text-[12px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
-                    {aiCollar.reasoning}
-                  </div>
-                  {aiCollar.warnings.length > 0 && (
-                    <div className="space-y-1">
-                      {aiCollar.warnings.map((w, i) => (
-                        <div key={i} style={{ color: '#F59E0B', fontSize: '12px' }}>
-                          ⚠ {w}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-[13px] mt-4 leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
-                  This is a 0% interest loan backed by your {stockName} shares. We hold a small portion as collateral
-                  and protect it with a zero-cost options collar (the green zone above). You get a virtual card
-                  instantly. Repay anytime before the due date and your shares are released. If you don&apos;t repay,
-                  the shares are sold to cover the balance.
-                </div>
-              )}
+              <div className="text-[13px] leading-relaxed space-y-3" style={{ color: 'var(--text-tertiary)' }}>
+                <p>
+                  <strong style={{ color: 'var(--text-secondary)' }}>Borrow at 0% interest.</strong>{' '}
+                  We hold {formatShares(collar.shares)} of your {stockName} shares as collateral.
+                </p>
+                <p>
+                  <strong style={{ color: 'var(--text-secondary)' }}>You&apos;re protected.</strong>{' '}
+                  If {stockName} drops below ${effectiveFloor.toFixed(0)}, we absorb the loss. If it rises
+                  above ${effectiveCap.toFixed(0)}, you give up gains beyond that. This is a{' '}
+                  <em>zero-cost collar</em> — the cap is the cost of protection.
+                </p>
+                <p>
+                  <strong style={{ color: 'var(--text-secondary)' }}>Repay anytime</strong> before {formatDate(collar.expiryDate)} and
+                  your shares are released. If not, they&apos;re sold to cover the balance.
+                </p>
+              </div>
             </div>
           )}
         </div>

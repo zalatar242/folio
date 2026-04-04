@@ -260,10 +260,11 @@ export default function Home() {
               onSpendFromHolding={handleViewHolding}
               onSpend={() => {
                 const first = holdings.find((h) => h.shares > 0);
-                if (first) handleSpendFromHolding(first);
-                else setScreen('spend');
+                if (first) handleSpendFromHolding(first, 'send');
+                else { setSpendMode('send'); setScreen('spend'); }
               }}
               onViewNotes={() => setScreen('notes')}
+              onViewCards={() => setScreen('cards')}
             />
           )}
           {screen === 'stock-detail' && selectedHolding && (
