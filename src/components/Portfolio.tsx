@@ -74,8 +74,16 @@ export default function Portfolio({
 
       {/* Connect Brokerage or Holdings */}
       <div>
-        <div className="text-[11px] font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--text-tertiary)' }}>
-          Holdings
+        <div className="flex items-center gap-2 mb-4">
+          <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+            Holdings
+          </div>
+          {isDemo && (
+            <div className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--accent)' }}>
+              HTS Tokenized
+            </div>
+          )}
         </div>
 
         {plaidStatus === 'idle' && isPlaidAvailable && isDemo ? (
@@ -127,7 +135,7 @@ export default function Portfolio({
                   <div className="flex-1">
                     <div className="text-[15px] font-semibold">{h.name}</div>
                     <div className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                      {h.shares} share{h.shares !== 1 ? 's' : ''}
+                      {h.shares} share{h.shares !== 1 ? 's' : ''}{isDemo && ' · HTS'}
                     </div>
                   </div>
                   <div className="text-right">

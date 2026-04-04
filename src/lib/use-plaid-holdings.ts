@@ -22,11 +22,32 @@ export function usePlaidHoldings(): PlaidHookResult {
   const [isPlaidAvailable, setIsPlaidAvailable] = useState(false);
   const [isDemo, setIsDemo] = useState(true);
 
-  // Fetch link token on mount
+  // Load tokenized holdings from Hedera (always runs — these are the native HTS equities)
+  const fetchHederaHoldings = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/hedera/holdings');
+      if (!res.ok) return false;
+      const data = await res.json();
+      if (data.holdings?.length > 0) {
+        setHoldings(data.holdings);
+        return true;
+      }
+    } catch { /* fall through */ }
+    return false;
+  }, []);
+
+  // Initialize: load HTS tokenized equities, then set up Plaid for brokerage linking
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
+      // Always load Hedera tokenized holdings first
+      const hasHedera = await fetchHederaHoldings();
+      if (!hasHedera && !cancelled) {
+        setHoldings(DEMO_HOLDINGS);
+      }
+
+      // Then check Plaid availability
       try {
         const res = await fetch('/api/plaid/create-link-token', {
           method: 'POST',
@@ -35,16 +56,11 @@ export function usePlaidHoldings(): PlaidHookResult {
         });
 
         if (!res.ok) {
-          const data = await res.json();
-          if (data.error === 'plaid_not_configured') {
-            if (!cancelled) {
-              setIsPlaidAvailable(false);
-              setHoldings(DEMO_HOLDINGS);
-              setStatus('idle');
-            }
-            return;
+          if (!cancelled) {
+            setIsPlaidAvailable(false);
+            setStatus('idle');
           }
-          throw new Error(data.error);
+          return;
         }
 
         const data = await res.json();
@@ -56,7 +72,6 @@ export function usePlaidHoldings(): PlaidHookResult {
       } catch {
         if (!cancelled) {
           setIsPlaidAvailable(false);
-          setHoldings(DEMO_HOLDINGS);
           setStatus('idle');
         }
       }
@@ -64,7 +79,7 @@ export function usePlaidHoldings(): PlaidHookResult {
 
     init();
     return () => { cancelled = true; };
-  }, []);
+  }, [fetchHederaHoldings]);
 
   // Fetch holdings after connection
   const fetchHoldings = useCallback(async () => {

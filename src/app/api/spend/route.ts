@@ -6,9 +6,17 @@ import { issueVirtualCard } from '@/lib/lithic';
 
 const hederaConfigured = !!(
   process.env.HEDERA_OPERATOR_ID &&
-  process.env.HEDERA_OPERATOR_KEY &&
-  process.env.MOCK_TSLA_TOKEN_ID
+  process.env.HEDERA_OPERATOR_KEY
 );
+
+// Map stock symbols to their Hedera token IDs
+function getStockTokenId(symbol: string): string | undefined {
+  const map: Record<string, string | undefined> = {
+    TSLA: process.env.MOCK_TSLA_TOKEN_ID,
+    AAPL: process.env.MOCK_AAPL_TOKEN_ID,
+  };
+  return map[symbol.toUpperCase()];
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,15 +39,15 @@ export async function POST(req: NextRequest) {
 
     let txId = 'demo-tx-' + Date.now();
 
-    if (hederaConfigured) {
+    const stockTokenId = getStockTokenId(symbol);
+    if (hederaConfigured && stockTokenId) {
       // Real Hedera flow
       const { transferToken, mintSpendNoteWithIpfs, transferNft, getOperatorId } = await import('@/lib/hedera');
       const operatorId = getOperatorId().toString();
-      const tslaTokenId = process.env.MOCK_TSLA_TOKEN_ID!;
       const usdcTokenId = process.env.USDC_TEST_TOKEN_ID!;
       const noteTokenId = process.env.SPEND_NOTE_TOKEN_ID!;
 
-      txId = await transferToken(tslaTokenId, userAccountId, operatorId, collar.sharesHts);
+      txId = await transferToken(stockTokenId, userAccountId, operatorId, collar.sharesHts);
       await transferToken(usdcTokenId, operatorId, userAccountId, collar.advanceHts);
 
       const now = new Date().toISOString();
