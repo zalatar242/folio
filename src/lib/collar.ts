@@ -38,8 +38,10 @@ export function calculateCollar(
 ): CollarResult {
   const shares = spendAmount / stockPrice;
   const sharesHts = Math.floor(shares * 10 ** HTS_DECIMALS);
-  const floor = stockPrice * (1 - FLOOR_PCT);
-  const cap = stockPrice * (1 + CAP_PCT);
+  // Scale floor/cap by sqrt(duration) — longer collars need wider ranges
+  const durationScale = Math.sqrt(durationMonths);
+  const floor = stockPrice * (1 - FLOOR_PCT * durationScale);
+  const cap = stockPrice * (1 + CAP_PCT * durationScale);
   const collateralValue = shares * stockPrice;
   const advance = spendAmount;
   const advanceHts = Math.floor(advance * 10 ** HTS_DECIMALS);

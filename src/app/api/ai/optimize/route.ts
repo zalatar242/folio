@@ -115,9 +115,18 @@ export async function POST(req: NextRequest) {
       collar: { shares: number; floor: number; cap: number; advance: number; fee: number; expiryDate: string };
     }> = {};
 
+    // The AI/quant optimizer returns floor/cap for ~1 month of risk.
+    // Scale by sqrt(duration) so longer collars have proportionally wider ranges.
+    const baseDuration = recommendation.durationMonths || 1;
+
     for (const months of DURATIONS) {
-      // Clone recommendation with this specific duration
-      const durationRec = { ...recommendation, durationMonths: months };
+      const durationScale = Math.sqrt(months / baseDuration);
+      const durationRec = {
+        ...recommendation,
+        durationMonths: months,
+        floorPct: Math.min(0.30, recommendation.floorPct * durationScale),
+        capPct: Math.min(0.50, recommendation.capPct * durationScale),
+      };
       const collar = calculateOptimizedCollar(amount, priceData.price, durationRec);
 
       durations[months] = {
