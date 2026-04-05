@@ -64,9 +64,9 @@ Pinata IPFS
 
 - **Next.js 16** — App Router, TypeScript, Tailwind CSS
 - **Hedera HTS** — Fungible tokens (MOCK-TSLA, MOCK-AAPL, USDC-TEST) + NFT Spend Notes
-- **Chainlink** — CollarOracle on Base Sepolia reads Data Streams prices + DoltHub implied volatility via CRE workflow
+- **Chainlink** — Primary price source via CollarOracle on Base Sepolia (direct Price Feeds + CRE Data Streams + DoltHub IV)
 - **Dynamic** — Email-only authentication (no wallet UX)
-- **Yahoo Finance** — Real-time stock prices (fallback)
+- **Yahoo Finance** — Stock price fallback when Chainlink data is stale or unavailable
 - **Pinata** — IPFS metadata storage for Spend Note NFTs
 - **Vercel AI SDK** — AI-optimized protection parameters using real market volatility
 
@@ -81,8 +81,9 @@ Pinata IPFS
 ### Chainlink
 
 - CollarOracle smart contract on Base Sepolia stores DON-verified price and volatility data
+- Direct Price Feed reads via `getLatestPrice` for live pricing independent of the CRE workflow
 - CRE workflow reads Chainlink Data Streams (real-time prices) and DoltHub (options implied volatility)
-- Folio reads on-chain parameters to set protection ranges using real market data
+- Folio reads on-chain price + collar parameters (floor/cap/volatility) as its primary data source
 
 ### Dynamic
 
