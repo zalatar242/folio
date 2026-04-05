@@ -21,7 +21,7 @@ interface PlaidHookResult {
 export function usePlaidHoldings(userAccountId?: string): PlaidHookResult {
   const { user } = useDynamicContext();
   const [status, setStatus] = useState<PlaidStatus>('loading');
-  const [holdings, setHoldings] = useState<Holding[]>(DEMO_HOLDINGS);
+  const [holdings, setHoldings] = useState<Holding[]>([]);
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [isPlaidAvailable, setIsPlaidAvailable] = useState(false);
   const [isDemo, setIsDemo] = useState(true);
@@ -75,12 +75,19 @@ export function usePlaidHoldings(userAccountId?: string): PlaidHookResult {
         return;
       }
 
-      // Load user's on-chain HTS stock holdings (minted at registration)
-      const htsHoldings = await fetchHederaHoldings();
+      // Load user's on-chain HTS stock holdings (minted at registration).
+      // Retries with backoff to handle mirror node sync delay.
+      let htsHoldings = await fetchHederaHoldings();
+
+      // If still empty, registration minting may have failed — re-attempt via sync
+      if (!htsHoldings && !cancelled && userAccountId) {
+        await syncHoldingsToChain(userAccountId, DEMO_HOLDINGS);
+        htsHoldings = await fetchHederaHoldings(2); // shorter retry for second attempt
+      }
+
+      // If still nothing, show empty state — never show fake holdings
       if (!htsHoldings && !cancelled) {
-        // Show demo holdings in UI while waiting for mirror node to catch up.
-        // Don't mint — registration already handles that.
-        setHoldings(DEMO_HOLDINGS);
+        setHoldings([]);
       }
 
       // If user has a connected brokerage, sync those holdings to chain.
@@ -163,7 +170,6 @@ export function usePlaidHoldings(userAccountId?: string): PlaidHookResult {
       await fetchHoldings();
     } catch {
       setStatus('error');
-      setHoldings(DEMO_HOLDINGS);
     }
   }, [fetchHoldings]);
 
