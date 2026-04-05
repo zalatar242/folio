@@ -170,12 +170,27 @@ export default function Home() {
   }, [folioUser]);
 
   // Fetch user's on-chain token balances (USDC, stocks, etc.)
+  // On first load after registration, retry with backoff to handle sync delay
   useEffect(() => {
     if (!folioUser?.hederaAccountId) return;
-    fetchCryptoBalances();
+    let cancelled = false;
+
+    async function initialFetch() {
+      for (let attempt = 0; attempt <= 3; attempt++) {
+        if (cancelled) return;
+        await fetchCryptoBalances();
+        // If we got holdings or exhausted retries, stop
+        if (attempt === 3) break;
+        // Wait before retrying (gives mirror node time to sync)
+        await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+      }
+    }
+
+    initialFetch();
     const interval = setInterval(fetchCryptoBalances, 15000);
-    return () => clearInterval(interval);
-  }, [folioUser, fetchCryptoBalances]);
+    return () => { cancelled = true; clearInterval(interval); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folioUser?.hederaAccountId]);
 
   const handleViewHolding = (holding: Holding) => {
     setSelectedHolding(holding);
