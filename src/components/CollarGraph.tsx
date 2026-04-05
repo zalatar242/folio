@@ -107,10 +107,10 @@ export default function CollarGraph({ price, floor, cap, stockName = 'stock', du
           </linearGradient>
         </defs>
 
-        {/* Current price dot */}
-        <circle cx={left + 10} cy={priceY} r="5" fill="#10B981" />
-        <circle cx={left + 10} cy={priceY} r="9" fill="#10B981" opacity="0.15" />
-        <text x={left + 22} y={priceY - 4} fill="#10B981" fontSize="9" fontWeight="600" fontFamily="Geist,sans-serif">${price.toFixed(0)} now</text>
+        {/* Current price dot — placed on the first point of the path */}
+        <circle cx={points[0][0]} cy={points[0][1]} r="5" fill="#10B981" />
+        <circle cx={points[0][0]} cy={points[0][1]} r="9" fill="#10B981" opacity="0.15" />
+        <text x={points[0][0] + 12} y={points[0][1] - 4} fill="#10B981" fontSize="9" fontWeight="600" fontFamily="Geist,sans-serif">${price.toFixed(0)} now</text>
 
         {/* Scenario labels */}
         <text x="180" y={capY - 4} textAnchor="middle" fill="#10B981" fontSize="8.5" fontWeight="500" fontFamily="Geist,sans-serif" opacity="0.7">
