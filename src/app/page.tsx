@@ -13,6 +13,7 @@ import CardsList from '@/components/CardsList';
 import NotesList from '@/components/NotesList';
 import NoteDetail from '@/components/NoteDetail';
 import Settings from '@/components/Settings';
+import Spinner from '@/components/Spinner';
 import { AuthGuard } from '@/components/auth/auth-guard';
 import { usePlaidHoldings } from '@/lib/use-plaid-holdings';
 import { useUserRegistration } from '@/lib/use-user-registration';
@@ -197,6 +198,37 @@ export default function Home() {
     setSelectedNoteId(noteId);
     setScreen('note-detail');
   };
+
+  // Loading gate — block UI while registration is in flight
+  // This prevents navigating to spend before folioUser is populated
+  if (registering) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen flex items-center justify-center main-gradient px-6">
+          <div className="w-full max-w-[380px]">
+            <div className="card p-8 text-center space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center"
+                style={{ background: 'var(--accent-muted)' }}>
+                <Spinner size={28} />
+              </div>
+              <div className="text-[18px] font-bold" style={{ color: 'var(--text-primary)' }}>
+                {regStatus === 'generating-key' ? 'Generating wallet key...'
+                  : regStatus === 'creating-account' ? 'Creating Hedera account...'
+                  : regStatus === 'signing-association' ? 'Signing token associations...'
+                  : regStatus === 'completing' ? 'Completing setup...'
+                  : regStatus === 'encrypting-key' ? 'Encrypting & backing up key...'
+                  : regStatus === 'recovering-key' ? 'Decrypting wallet...'
+                  : 'Setting up...'}
+              </div>
+              <div className="text-[13px]" style={{ color: 'var(--text-tertiary)' }}>
+                This only takes a few seconds
+              </div>
+            </div>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
 
   // Passphrase prompt for new users or key recovery
   if (needsPassphrase || needsRecovery) {

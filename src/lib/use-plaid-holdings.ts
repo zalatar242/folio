@@ -27,18 +27,24 @@ export function usePlaidHoldings(userAccountId?: string): PlaidHookResult {
   const [isDemo, setIsDemo] = useState(true);
 
   // Load tokenized holdings from Hedera (user's on-chain balances)
-  // Returns the fetched holdings so callers can use them without stale closures
-  const fetchHederaHoldings = useCallback(async (): Promise<Holding[] | null> => {
+  // Retries with backoff to handle mirror node sync delay after registration
+  const fetchHederaHoldings = useCallback(async (retries = 4): Promise<Holding[] | null> => {
     if (!userAccountId) return null;
-    try {
-      const res = await authFetch(`/api/hedera/holdings?accountId=${encodeURIComponent(userAccountId)}`);
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (data.holdings?.length > 0) {
-        setHoldings(data.holdings);
-        return data.holdings;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const res = await authFetch(`/api/hedera/holdings?accountId=${encodeURIComponent(userAccountId)}`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (data.holdings?.length > 0) {
+          setHoldings(data.holdings);
+          return data.holdings;
+        }
+      } catch { /* fall through */ }
+      // Mirror node may not have synced yet — wait before retrying
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
       }
-    } catch { /* fall through */ }
+    }
     return null;
   }, [userAccountId]);
 
