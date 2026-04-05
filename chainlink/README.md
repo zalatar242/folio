@@ -71,16 +71,13 @@ cp .env.example .env
 
 Deploy `contracts/CollarOracle.sol` to Sepolia, then update `collarOracleAddress` in config files.
 
-### 5. Simulate
+### 5. Simulate (one command)
 
 ```bash
-# Start mock server (optional, for offline testing)
-npx tsx mock-server/server.ts
-
-# Run CRE simulation
-cd my-workflow
-cre workflow simulate folio-collar-oracle-staging --target staging-settings
+./simulate.sh
 ```
+
+This starts the mock server, runs the full CRE workflow simulation, and cleans up automatically. No API keys or .env setup needed — mock values are used for offline testing.
 
 ### 6. Deploy to CRE network
 
