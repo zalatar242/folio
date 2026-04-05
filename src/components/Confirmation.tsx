@@ -22,94 +22,69 @@ export default function Confirmation({ result, onViewDetails, onDone }: Confirma
         </svg>
       </div>
 
-      <div className="text-[26px] font-bold mb-2">Sent!</div>
-      <div className="text-[15px] mb-10" style={{ color: 'var(--text-secondary)' }}>
+      {/* Hero — the value prop in one line */}
+      <div className="text-[26px] font-bold mb-2">
         {formatUsd(result.amount)} sent to {result.recipientName || 'your portfolio'}
       </div>
+      <div className="text-[15px] mb-10" style={{ color: 'var(--accent)', fontWeight: 500 }}>
+        without selling a single share
+      </div>
 
-      {/* Advance Summary Card */}
-      <div className="card p-6 text-left mb-8">
-        <div className="text-[11px] font-semibold uppercase tracking-wider mb-5" style={{ color: 'var(--text-tertiary)' }}>
-          Advance Summary
-        </div>
-
+      {/* Minimal deal summary */}
+      <div className="card p-6 text-left mb-6">
         <div className="flex flex-col gap-4">
-          {[
-            { label: 'Amount', value: formatUsd(result.amount) },
-            ...(result.recipientName ? [{ label: 'Recipient', value: result.recipientName }] : []),
-            { label: 'Collateral', value: `${formatShares(result.shares)} ${result.symbol}` },
-            { label: 'Interest', value: '0%', accent: true },
-            { label: 'Repay by', value: formatDate(expiryDate) },
-            ...(result.floor ? [{ label: 'If stock drops', value: `Protected below $${result.floor.toFixed(2)}` }] : []),
-            ...(result.cap ? [{ label: 'Upside cap', value: `Capped at $${result.cap.toFixed(2)}` }] : []),
-          ].map((row) => (
-            <div key={row.label} className="flex justify-between text-[14px]">
-              <span style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
-              <span className={`font-semibold ${('mono' in row && row.mono) ? 'font-mono text-[12px]' : ''}`} style={{
-                color: ('accent' in row && row.accent) ? 'var(--accent)' : 'var(--text-primary)',
-                fontVariantNumeric: 'tabular-nums',
-              }}>{row.value}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="text-[12px] mt-5 pt-5 leading-relaxed" style={{ color: 'var(--text-tertiary)', borderTop: '1px solid var(--border)' }}>
-          Settle {formatUsd(result.amount)} before {formatDate(expiryDate)} to unlock your shares.
-          If not settled, collateral shares will be sold to cover the balance.
+          <div className="flex justify-between text-[14px]">
+            <span style={{ color: 'var(--text-tertiary)' }}>Collateral locked</span>
+            <span className="font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {formatShares(result.shares)} {result.symbol}
+            </span>
+          </div>
+          <div className="flex justify-between text-[14px]" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+            <span style={{ color: 'var(--text-tertiary)' }}>Repay</span>
+            <span className="font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {formatUsd(result.amount)} by {formatDate(expiryDate)}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* AI Analysis (collapsible) */}
+      {/* AI insight — visible by default, forward-looking */}
       {result.ai && (
-        <details className="card p-5 text-left mb-8">
-          <summary className="flex items-center gap-2 cursor-pointer text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
-              <path d="M18 20V10M12 20V4M6 20v-6" />
-            </svg>
-            AI Analysis
-            <span className="ml-auto text-[11px] font-medium px-2 py-0.5 rounded-full" style={{
-              background: result.ai.riskLevel === 'conservative' ? 'rgba(16,185,129,0.1)' : result.ai.riskLevel === 'aggressive' ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)',
-              color: result.ai.riskLevel === 'conservative' ? 'var(--accent)' : result.ai.riskLevel === 'aggressive' ? 'var(--negative)' : '#3B82F6',
-            }}>
-              {result.ai.riskLevel === 'conservative' ? 'Conservative' : result.ai.riskLevel === 'aggressive' ? 'Aggressive' : 'Balanced'}
-            </span>
-          </summary>
-          <div className="text-[13px] leading-relaxed mt-4" style={{ color: 'var(--text-secondary)' }}>
-            {result.ai.reasoning}
-          </div>
-          {result.ai.warnings.length > 0 && (
-            <div className="space-y-1.5 mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-              {result.ai.warnings.map((w, i) => (
-                <div key={i} className="text-[12px] flex items-start gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
-                  <span style={{ color: '#F59E0B' }}>!</span> {w}
-                </div>
-              ))}
-            </div>
-          )}
-        </details>
+        <div className="flex items-start gap-2 py-3 px-4 rounded-xl text-left mb-8"
+          style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.08)' }}>
+          <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--accent)' }}>★</span>
+          <span className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            {result.ai.oneLiner
+              || `${result.symbol} looks steady. Your shares should be fine through ${formatDate(expiryDate)}. I'll nudge you before the deadline.`}
+          </span>
+        </div>
       )}
 
-      {/* Transaction ID */}
-      <div className="text-[11px] mb-8 font-mono" style={{ color: 'var(--text-tertiary)' }}>
+      {/* If no AI result, show a default forward-looking message */}
+      {!result.ai && (
+        <div className="flex items-start gap-2 py-3 px-4 rounded-xl text-left mb-8"
+          style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.08)' }}>
+          <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--accent)' }}>★</span>
+          <span className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Repay {formatUsd(result.amount)} by {formatDate(expiryDate)} to unlock your shares. I&apos;ll nudge you before the deadline.
+          </span>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex flex-col gap-3">
+        <button onClick={onDone} className="btn-primary w-full py-4 text-[15px]">
+          Back to Portfolio
+        </button>
         <a
           href={`https://hashscan.io/testnet/transaction/${result.txId}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:underline"
+          className="text-center text-[12px] py-2"
           style={{ color: 'var(--text-tertiary)' }}
         >
-          Verify on Hedera Testnet
+          View receipt ↗
         </a>
-      </div>
-
-      {/* Actions */}
-      <div className="flex flex-col gap-3">
-        <button onClick={onViewDetails} className="btn-primary w-full py-4 text-[15px]">
-          View Transaction
-        </button>
-        <button onClick={onDone} className="btn-secondary w-full py-4 text-[15px]">
-          Back to Portfolio
-        </button>
       </div>
     </div>
   );
