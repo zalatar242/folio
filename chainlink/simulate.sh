@@ -17,13 +17,19 @@ fi
 
 # Install workflow deps
 echo "Installing dependencies..."
-cd my-workflow && npm install --silent 2>/dev/null && cd ..
+(cd my-workflow && npm install --silent)
 
 # Start mock server in background
 echo "Starting mock server (localhost:8787)..."
 npx tsx mock-server/server.ts &
 MOCK_PID=$!
-sleep 2
+trap 'kill $MOCK_PID 2>/dev/null || true' EXIT
+
+# Wait for server to be ready
+for i in $(seq 1 20); do
+  if curl -s -o /dev/null http://localhost:8787 2>/dev/null; then break; fi
+  sleep 0.5
+done
 
 # Run simulation with mock secrets
 echo ""
@@ -38,7 +44,5 @@ cre workflow simulate ./my-workflow \
   --non-interactive \
   --trigger-index 0
 
-# Cleanup
-kill $MOCK_PID 2>/dev/null || true
 echo ""
 echo "Done! Mock server stopped."
