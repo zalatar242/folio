@@ -39,13 +39,17 @@ export async function POST(req: NextRequest) {
     const registry = getTokenRegistry();
     const HTS_DECIMALS = 6;
 
-    const results: { symbol: string; minted: number; transferred: number }[] = [];
+    const results: { symbol: string; minted: number; transferred: number; error?: string }[] = [];
 
     for (const holding of holdings) {
       const entry = registry.find(
         (t) => t.symbol === holding.symbol && t.type === 'stock'
       );
-      if (!entry) continue;
+      if (!entry) {
+        results.push({ symbol: holding.symbol, minted: 0, transferred: 0, error: 'no_token_in_registry' });
+        console.warn(`[sync] No token registry entry for ${holding.symbol} — check MOCK_${holding.symbol}_TOKEN_ID env var`);
+        continue;
+      }
 
       const tokenId = entry.tokenId;
 
@@ -65,6 +69,8 @@ export async function POST(req: NextRequest) {
         results.push({ symbol: holding.symbol, minted: deficit, transferred: deficit });
         console.log(`[sync] Minted ${deficit} ${holding.symbol} (${holding.shares} shares) to ${accountId}`);
       } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        results.push({ symbol: holding.symbol, minted: 0, transferred: 0, error: msg });
         console.error(`[sync] Failed to mint ${holding.symbol}:`, err);
       }
     }
@@ -84,7 +90,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ synced: true, results });
+    return NextResponse.json({
+      synced: true,
+      results,
+      registryTokens: registry.map((t) => `${t.symbol}=${t.tokenId}`),
+    });
   } catch (error) {
     console.error('Holdings sync error:', error);
     return NextResponse.json(

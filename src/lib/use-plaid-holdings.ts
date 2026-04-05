@@ -51,7 +51,7 @@ export function usePlaidHoldings(userAccountId?: string): PlaidHookResult {
   // Sync holdings to on-chain HTS tokens, then refresh from chain
   const syncHoldingsToChain = useCallback(async (accountId: string, holdingsToSync: { symbol: string; shares: number }[]): Promise<Holding[] | null> => {
     try {
-      await authFetch('/api/holdings/sync', {
+      const res = await authFetch('/api/holdings/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -59,9 +59,14 @@ export function usePlaidHoldings(userAccountId?: string): PlaidHookResult {
           holdings: holdingsToSync.map((h) => ({ symbol: h.symbol, shares: h.shares })),
         }),
       });
+      const data = await res.json();
+      console.log('[holdings] sync response:', data);
       // Re-fetch HTS holdings so UI matches on-chain state
       return await fetchHederaHoldings();
-    } catch { return null; }
+    } catch (err) {
+      console.error('[holdings] sync failed:', err);
+      return null;
+    }
   }, [fetchHederaHoldings]);
 
   // Initialize: load HTS tokenized equities, then set up Plaid for brokerage linking
