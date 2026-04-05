@@ -1,107 +1,112 @@
-# Folio — 0% Interest Credit Line Backed by Your Stocks
+# Folio
 
-> Robinhood let everyone trade stocks. Folio lets everyone borrow against them — at 0% interest.
+**0% interest credit line backed by your stocks. Borrow without selling, no minimums, no taxes.**
 
 https://github.com/user-attachments/assets/636b3a70-c231-438c-a583-81e847c3d33c
 
-## The Problem
+Globally, trillions sit in brokerage accounts that people can't spend. Need cash? You either sell shares and lose up to 37% to capital gains taxes, or take a margin loan at 7-12% interest — if you even qualify (most brokerages require $500K+).
 
-Americans have $30 trillion in brokerage accounts they can't spend. If you need cash, you either:
+Folio gives you a 0% credit line backed by your stock portfolio. Connect your brokerage, pick a stock, spend. Your shares stay yours.
 
-1. **Sell your shares** — lose 20-37% to capital gains taxes, permanently exit your position
-2. **Take a margin loan** — pay 7-12% interest, risk margin calls and liquidation, need $500K+ at most brokerages
+## How it works
 
-Both options are terrible for a 28-year-old with $40K in Tesla who needs $500 for a dental bill.
+When you spend $50 against your $225 TSLA:
 
-## What Folio Does
+1. Folio locks ~0.222 shares as collateral
+2. A zero-cost collar is set — floor at $213.75 (downside protected), ceiling at $258.75 (upside temporarily capped)
+3. You receive $50 USDC instantly at 0% interest
+4. Repay anytime to unlock your shares, or let them auto-settle at expiry
 
-**Folio gives you a 0% loan against your stock portfolio so you can spend your investments without selling them.**
+The financial trick: selling limited upside (the call) pays for downside protection (the put). The collar parameters aren't hardcoded — a Chainlink CRE workflow computes them using real-time prices from Data Streams and implied volatility from options markets. Net cost to the user: $0.
 
-- **0% interest, always** — no spread, no hidden fees
-- **No minimums** — borrow against $100 or $100,000 in stocks
-- **No liquidation risk** — mathematically impossible, your downside is bounded
-- **No selling, no taxes** — your shares stay yours
-
-The only trade-off: your upside is temporarily capped while the loan is open (typically ~115% for 30 days). For someone spending $50 on groceries, that's invisible.
-
-## How It Works (for judges)
-
-When you spend $50 against $225 TSLA:
-
-1. Folio locks ~0.222 TSLA shares as collateral
-2. A protection range is set: floor at $213.75 (downside protected), ceiling at $258.75 (upside limited)
-3. You receive $50 USDC at 0% interest
-4. At expiry, repay $50 and get your shares back — or the shares settle the balance automatically
-
-The financial structure that makes 0% possible: a zero-cost options hedge that offsets borrowing cost by temporarily limiting upside. The premium from selling the upside pays for the downside protection. Net cost to the user: $0.
-
-## The Market
-
-Fidelity, Schwab, and Morgan Stanley all offer securities-backed lines of credit (SBLOCs). Every single one requires $500K+ in assets and charges 7-9% interest. Folio does the same thing for anyone, at 0%, from their phone.
+The entire experience feels like a neobank — email login, "spend" buttons, transaction receipts. No wallets, no hex addresses, no MetaMask. The blockchain is invisible plumbing.
 
 ## Architecture
 
 ```
-User (email login via Dynamic)
-      |
-      v
-Next.js Frontend (Tailwind, App Router)
-      |
-      v
-API Routes (/api/spend, /api/price, /api/balance)
-      |               |                |
-      v               v                v
-Hedera HTS      Yahoo Finance    Chainlink Oracle
-(tokens +       (live stock      (on-chain price +
- NFT mints)      prices)          volatility data)
-      |
-      v
-Pinata IPFS
-(Spend Note metadata)
+Plaid ──── brokerage holdings sync ────┐
+                                       v
+Dynamic ── email OTP auth ──────> Next.js App ──> Hedera HTS
+                                       |          (tokens, NFT spend notes,
+                                       |           HCS audit trail)
+                                       |
+                              ┌────────┼────────┐
+                              v        v        v
+                        Chainlink   Yahoo    Vercel AI SDK
+                        CRE         Finance  (collar parameter
+                        workflow   (fallback)  optimization)
+                           |
+                           v
+                     CollarOracle          Pinata IPFS
+                     (Base Sepolia)        (note metadata)
 ```
 
-## Tech Stack
+## Tech stack
 
-- **Next.js 16** — App Router, TypeScript, Tailwind CSS
-- **Hedera HTS** — Fungible tokens (MOCK-TSLA, MOCK-AAPL, USDC-TEST) + NFT Spend Notes
-- **Chainlink** — Primary price source via CollarOracle on Base Sepolia (direct Price Feeds + CRE Data Streams + DoltHub IV)
-- **Dynamic** — Email-only authentication (no wallet UX)
-- **Yahoo Finance** — Stock price fallback when Chainlink data is stale or unavailable
-- **Pinata** — IPFS metadata storage for Spend Note NFTs
-- **Vercel AI SDK** — AI-optimized protection parameters using real market volatility
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16 App Router, React 19, Tailwind CSS 4, TypeScript |
+| Auth | Dynamic JS SDK — email OTP, server-side JWT via JWKS, zero crypto UX |
+| Brokerage | Plaid — real-time holdings sync from connected accounts |
+| Tokens | Hedera HTS — fungible tokens (MOCK-TSLA, MOCK-AAPL, USDC-TEST), NFT Spend Notes, HCS audit trail |
+| Pricing | Chainlink CRE workflow (Data Streams + DoltHub IV + EVM Write to CollarOracle on Base Sepolia), Yahoo Finance fallback |
+| AI | Vercel AI SDK — collar optimizer (3-tier: on-chain oracle > LLM + options data > Black-Scholes fallback), Hedera Agent Kit (autonomous on-chain operations via natural language) |
+| Storage | Pinata IPFS (spend note metadata), Supabase (user registry, spend notes) |
+| Cards | Lithic — virtual debit cards funded by USDC advances |
 
-## Sponsor Integrations
+## Sponsor integrations
 
 ### Hedera
 
-- Creates and manages mock equity tokens (MOCK-TSLA, MOCK-AAPL) and USDC-TEST via HTS
-- Mints Spend Note NFTs with on-chain metadata pointing to IPFS
-- No Solidity — pure Hedera SDK
+All financial operations run on Hedera Token Service via `@hashgraph/sdk` — zero Solidity anywhere on Hedera. Four+ native services:
+
+- **HTS Fungible Tokens** — equity tokens and USDC-TEST with custom fee schedules
+- **HTS NFTs** — Spend Note collection, each mint records collar parameters in IPFS metadata
+- **Hedera Consensus Service** — immutable audit trail for every spend, repayment, and settlement
+- **Account Management** — user account creation, token associations, KYC grants, freeze/unfreeze
+
+Non-custodial flow: collateral lock transactions are prepared server-side as unsigned bytes, signed client-side with the user's encrypted Hedera key (AES-256-CBC), then co-signed by the operator.
+
+The Hedera Agent Kit integration (MiniMax M1 via Vercel AI SDK) provides an autonomous AI agent for on-chain operations — checking balances, transferring tokens, minting NFTs, and submitting HCS messages via natural language.
 
 ### Chainlink
 
-- CollarOracle smart contract on Base Sepolia stores DON-verified price and volatility data
-- Direct Price Feed reads via `getLatestPrice` for live pricing independent of the CRE workflow
-- CRE workflow reads Chainlink Data Streams (real-time prices) and DoltHub (options implied volatility)
-- Folio reads on-chain price + collar parameters (floor/cap/volatility) as its primary data source
+A CRE workflow is the core pricing engine:
+
+1. **Data Streams** via Confidential HTTP — real-time asset prices at 8-decimal precision (HMAC credentials secured in the enclave)
+2. **DoltHub SQL API** — options implied volatility, historical volatility, IV rank
+3. **Collar computation** — zero-cost collar strikes using log-symmetric math with real market volatility
+4. **EVM Write** — results written on-chain to [CollarOracle](https://sepolia.basescan.org/address/0x00A3cF51bA20eA6f1754BaFcecA6d144e3d1D00f) on Base Sepolia
+
+Without this workflow, protection ranges would be hardcoded. With it, floor/cap ranges are DON-verified and market-data-driven.
 
 ### Dynamic
 
-- Email-only authentication (OTP) — no wallets, no MetaMask, no crypto UX
-- Powers the "sign in to spend" auth flow
+- **JS SDK** — email-only OTP authentication, custom themed to match the neobank aesthetic
+- **Node SDK** — 2-of-2 MPC server wallets for oracle maintenance on Base Sepolia, delegation flow for automated settlement on behalf of users
+- **Server-side JWT** verification via JWKS on every API route
 
-## Quick Start
+Dynamic is what makes blockchain invisible. Users sign in with email, spend against their stocks, and never know they have a Hedera account.
+
+## Getting started
 
 ```bash
-git clone <repo>
+git clone https://github.com/zalatar242/folio.git
 cd folio
 cp .env.example .env.local
-# Fill in HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY, NEXT_PUBLIC_DYNAMIC_ENV_ID, PINATA_API_KEY
+# Fill in: HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY,
+#          NEXT_PUBLIC_DYNAMIC_ENV_ID, PINATA_API_KEY
 npm install
 npm run setup     # Creates tokens on Hedera testnet
 npm run dev       # http://localhost:3000
 ```
 
-## Team
+## Links
 
-Solo build — ETHGlobal Cannes 2026, 36 hours.
+- [Live Demo](https://folio-blush-omega.vercel.app)
+- [CollarOracle on Base Sepolia](https://sepolia.basescan.org/address/0x00A3cF51bA20eA6f1754BaFcecA6d144e3d1D00f)
+- [Hedera Testnet Explorer](https://hashscan.io/testnet)
+
+---
+
+Solo build — [ETHGlobal Cannes 2026](https://ethglobal.com/events/cannes2026), 36 hours.
