@@ -157,7 +157,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
   const effectiveCap = currentAi ? (stockPrice || 225) * (1 + currentAi.capPct) : collar.cap;
 
   const handleSend = async () => {
-    if (val <= 0 || val > maxSpend) return;
+    if (val <= 0 || val > maxSpend || !currentUserAccountId) return;
     setSending(true);
     setSendError('');
 
@@ -497,6 +497,14 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
               {aiLoading && (
                 <div className="h-3 w-16 rounded ml-auto" style={{ background: 'linear-gradient(90deg, var(--bg-elevated) 25%, var(--border) 50%, var(--bg-elevated) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
               )}
+              {!aiLoading && currentAi && (
+                <span className="text-[10px] font-semibold ml-auto flex items-center gap-1" style={{ color: 'var(--accent)' }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                  </svg>
+                  AI optimized
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -512,9 +520,14 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
                 <div className="text-[11px] mt-1" style={{ color: 'var(--text-tertiary)' }}>Upside cap</div>
               </div>
             </div>
-            {currentAi && currentAi.warnings.length > 0 && (
-              <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                {currentAi.warnings.map((w, i) => (
+            {currentAi && (
+              <div className="mt-3 pt-3 space-y-2" style={{ borderTop: '1px solid var(--border)' }}>
+                {currentAi.reasoning && (
+                  <div className="text-[11px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
+                    {currentAi.reasoning}
+                  </div>
+                )}
+                {currentAi.warnings.length > 0 && currentAi.warnings.map((w, i) => (
                   <div key={i} className="text-[12px] flex items-start gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
                     <span style={{ color: '#F59E0B' }}>!</span> {w}
                   </div>
@@ -577,7 +590,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
       {/* Action Button */}
       <button
         onClick={handleSend}
-        disabled={!priceLoaded || val <= 0 || val > maxSpend || sending || !hasRecipient}
+        disabled={!priceLoaded || val <= 0 || val > maxSpend || sending || !hasRecipient || !currentUserAccountId}
         className="btn-primary w-full py-4 text-[15px]"
       >
         {sending
