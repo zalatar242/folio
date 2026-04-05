@@ -2,6 +2,16 @@
 
 All notable changes to Folio will be documented in this file.
 
+## [0.2.8.0] - 2026-04-05
+
+### Changed
+- Chainlink is now the primary price source with a 3-tier fallback: Chainlink Price Feed, CRE CollarOracle, Yahoo Finance, then hardcoded
+- Added direct Chainlink Price Feed reads via `getLatestPrice` on the CollarOracle contract, independent of the CRE workflow
+- Tightened staleness window from 1 hour to 10 minutes for CRE data and 5 minutes for direct price feeds, matching the CRE cron schedule
+- Price data now includes collar parameters (floor/cap/volatility) when available from the Chainlink oracle
+- Chainlink prices now track change/changePercent across fetches instead of always returning zero
+- Frontend PriceData type updated to include `chainlink` source and optional collar fields
+
 ## [0.2.7.0] - 2026-04-05
 
 ### Added
