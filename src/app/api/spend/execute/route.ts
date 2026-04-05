@@ -6,6 +6,20 @@ import { getTokenIdForSymbol } from '@/lib/token-registry';
 import { verifyAuth, unauthorized } from '@/lib/auth';
 import { optimizeCollar, calculateOptimizedCollar } from '@/lib/ai-collar-optimizer';
 
+// Plain-English AI one-liner for the confirmation screen
+function generateExecuteOneLiner(symbol: string, changePercent: number, riskLevel: string, warnings: string[]): string {
+  const hasEarnings = warnings.some(w => /earning/i.test(w));
+  if (hasEarnings) return `Heads up: ${symbol} has earnings coming up. You're covered either way.`;
+  if (Math.abs(changePercent) > 3) {
+    return changePercent > 0
+      ? `${symbol} is up ${changePercent.toFixed(1)}% today. Good time to lock in value.`
+      : `${symbol} is down ${Math.abs(changePercent).toFixed(1)}% today. Your terms are adjusted for that.`;
+  }
+  if (riskLevel === 'conservative') return `${symbol} looks steady. Conservative terms applied.`;
+  if (riskLevel === 'aggressive') return `${symbol} is calm right now. You're getting tight terms.`;
+  return `${symbol} looks steady. Your shares should be fine.`;
+}
+
 const hederaConfigured = !!(
   process.env.HEDERA_OPERATOR_ID &&
   process.env.HEDERA_OPERATOR_KEY
@@ -278,6 +292,7 @@ export async function POST(req: NextRequest) {
         riskLevel: recommendation.riskLevel,
         reasoning: recommendation.reasoning,
         warnings: recommendation.warnings,
+        oneLiner: generateExecuteOneLiner(symbol, priceData.changePercent, recommendation.riskLevel, recommendation.warnings),
       },
       txId,
       card: cardPan ? {
