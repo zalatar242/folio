@@ -69,6 +69,7 @@ export interface SpendResult {
     riskLevel: string;
     reasoning: string;
     warnings: string[];
+    oneLiner?: string;
   };
 }
 

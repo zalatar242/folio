@@ -29,7 +29,7 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
   const [sendStatus, setSendStatus] = useState<'idle' | 'preparing' | 'signing' | 'submitting'>('idle');
   const [sendError, setSendError] = useState('');
   const { signTransaction } = useHederaKey();
-  const [expandHow, setExpandHow] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [currentHolding, setCurrentHolding] = useState<Holding>(selectedHolding);
   const [showPicker, setShowPicker] = useState(false);
   const [recipientInput, setRecipientInput] = useState('');
@@ -42,10 +42,12 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
 
   // AI collar optimizer state — stores all 3 duration results for instant switching
   const [aiResults, setAiResults] = useState<Record<number, {
-    recommendation: { floorPct: number; capPct: number; durationMonths: number; confidence: number; reasoning: string; riskLevel: string; warnings: string[] };
+    recommendation: { floorPct: number; capPct: number; durationMonths: number; confidence: number; reasoning: string; riskLevel: string; warnings: string[]; oneLiner?: string };
     collar: { shares: number; floor: number; cap: number; advance: number; fee: number; expiryDate: string };
   }> | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  // Track AI-recommended duration
+  const [aiRecommendedDuration, setAiRecommendedDuration] = useState<number>(1);
 
   const hasRecipient = mode === 'card' || !!recipientAccountId;
   const resolvedRecipientId = recipientAccountId;
@@ -114,6 +116,10 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
           const data = await res.json();
           if (data.durations) {
             setAiResults(data.durations);
+            // Set AI-recommended duration from the response
+            if (data.recommendation?.durationMonths) {
+              setAiRecommendedDuration(data.recommendation.durationMonths);
+            }
           }
         }
       } catch {
@@ -238,6 +244,14 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
       setSendStatus('idle');
     }
   };
+
+  // Transaction step display for contextual progress
+  const txSteps = [
+    { label: `Locking ${formatShares(collar.shares)} ${symbol} as collateral`, key: 'preparing' },
+    { label: 'Confirming your signature', key: 'signing' },
+    { label: mode === 'send' ? `Sending ${formatUsd(val)} to ${recipientName || 'recipient'}` : `Loading ${formatUsd(val)} onto your card`, key: 'submitting' },
+  ];
+  const activeStepIndex = sendStatus === 'preparing' ? 0 : sendStatus === 'signing' ? 1 : sendStatus === 'submitting' ? 2 : -1;
 
   return (
     <div className="space-y-8">
@@ -418,44 +432,40 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
         )}
       </div>
 
-      {/* Advance Details */}
-      <div className="card p-5 space-y-5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'var(--accent-muted)' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round">
-              <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
-            </svg>
-          </div>
-          <div className="text-[15px] font-semibold" style={{ color: 'var(--text-primary)' }}>0% interest credit line backed by your stocks</div>
+      {/* Deal Card — clean receipt-style summary */}
+      <div className="card p-5 space-y-4">
+        <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
+          0% interest loan
         </div>
 
-        {/* Stat Grid */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* Deal rows */}
+        <div className="flex flex-col">
           {[
-            { label: mode === 'send' ? 'They get' : 'Amount', value: formatUsd(val), color: 'var(--accent)' },
-            { label: 'Interest', value: '0%', color: 'var(--accent)' },
-            { label: 'Fees', value: '$0', color: 'var(--accent)' },
-          ].map((stat) => (
-            <div key={stat.label} className="p-4 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
-              <div className="text-[10px] mb-2 uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                {stat.label}
-              </div>
-              <div className="text-[18px] font-bold" style={{ color: stat.color, fontVariantNumeric: 'tabular-nums' }}>
-                {stat.value}
-              </div>
+            { label: mode === 'send' ? 'They get' : 'You get', value: formatUsd(val) },
+            { label: 'Collateral', value: `${formatShares(collar.shares)} ${symbol}` },
+            { label: 'Your cost', value: '$0', accent: true },
+            { label: 'Repay by', value: formatDate(collar.expiryDate) },
+          ].map((row) => (
+            <div key={row.label} className="flex justify-between text-[14px] py-2.5"
+              style={{ borderTop: '1px solid var(--border)' }}>
+              <span style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
+              <span className="font-semibold" style={{
+                color: row.accent ? 'var(--accent)' : 'var(--text-primary)',
+                fontVariantNumeric: 'tabular-nums',
+              }}>{row.value}</span>
             </div>
           ))}
         </div>
 
-        {/* Duration Picker */}
-        <div>
+        {/* Duration Picker with AI recommendation */}
+        <div className="pt-2" style={{ borderTop: '1px solid var(--border)' }}>
           <div className="text-[11px] mb-3 uppercase tracking-wider font-medium" style={{ color: 'var(--text-tertiary)' }}>
             Repay within
           </div>
           <div className="flex gap-2.5">
             {[1, 2, 3].map((m) => {
               const active = durationMonths === m;
+              const isRecommended = m === aiRecommendedDuration && aiResults !== null;
               return (
                 <button
                   key={m}
@@ -467,112 +477,127 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
                     color: active ? 'var(--accent)' : 'var(--text-secondary)',
                   }}
                 >
-                  {m} month{m > 1 ? 's' : ''}
+                  {m} mo{m > 1 ? 's' : ''}{isRecommended ? ' ★' : ''}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Collateral */}
-        <div aria-live="polite" className="p-4 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
-          <div className="flex justify-between text-[13px]">
-            <span style={{ color: 'var(--text-tertiary)' }}>Collateral</span>
-            <span className="font-medium" style={{ color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
-              {formatShares(collar.shares)} {symbol} ({formatUsd(collar.collateralValue)})
-            </span>
-          </div>
-        </div>
-
-        {/* Protection Range */}
+        {/* AI One-Liner */}
         {val > 0 && (
-          <div className="p-4 rounded-xl" style={{ background: 'var(--bg-elevated)' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
-                <path d="M18 20V10M12 20V4M6 20v-6" />
-              </svg>
-              <span className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-                Price Range
-              </span>
-              {aiLoading && (
-                <div className="h-3 w-16 rounded ml-auto" style={{ background: 'linear-gradient(90deg, var(--bg-elevated) 25%, var(--border) 50%, var(--bg-elevated) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
-              )}
-              {!aiLoading && currentAi && (
-                <span className="text-[10px] font-semibold ml-auto flex items-center gap-1" style={{ color: 'var(--accent)' }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                  </svg>
-                  AI optimized
+          <div>
+            {aiLoading ? (
+              <div className="flex items-center gap-2 py-3 px-4 rounded-xl"
+                style={{ background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.08)' }}>
+                <span style={{ color: 'var(--accent)', animation: 'pulse 2s infinite' }}>★</span>
+                <span className="text-[13px]" style={{ color: 'var(--text-tertiary)' }}>
+                  Checking {symbol} market conditions...
                 </span>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="text-[17px] font-bold" style={{ color: '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
-                  ${effectiveFloor.toFixed(2)}
-                </div>
-                <div className="text-[11px] mt-1" style={{ color: 'var(--text-tertiary)' }}>Protected floor</div>
               </div>
-              <div>
-                <div className="text-[17px] font-bold" style={{ color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>
-                  ${effectiveCap.toFixed(2)}
-                </div>
-                <div className="text-[11px] mt-1" style={{ color: 'var(--text-tertiary)' }}>Upside cap</div>
+            ) : currentAi?.oneLiner ? (
+              <div className="flex items-start gap-2 py-3 px-4 rounded-xl"
+                style={{
+                  background: currentAi.warnings.length > 0 ? 'rgba(245,158,11,0.04)' : 'rgba(16,185,129,0.04)',
+                  border: `1px solid ${currentAi.warnings.length > 0 ? 'rgba(245,158,11,0.08)' : 'rgba(16,185,129,0.08)'}`,
+                }}>
+                <span className="mt-0.5 flex-shrink-0" style={{ color: currentAi.warnings.length > 0 ? 'var(--warning)' : 'var(--accent)' }}>★</span>
+                <span className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  {currentAi.oneLiner}
+                </span>
               </div>
-            </div>
-            {currentAi && (
-              <div className="mt-3 pt-3 space-y-2" style={{ borderTop: '1px solid var(--border)' }}>
-                {currentAi.reasoning && (
-                  <div className="text-[11px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
-                    {currentAi.reasoning}
-                  </div>
-                )}
-                {currentAi.warnings.length > 0 && currentAi.warnings.map((w, i) => (
-                  <div key={i} className="text-[12px] flex items-start gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
-                    <span style={{ color: '#F59E0B' }}>!</span> {w}
-                  </div>
-                ))}
+            ) : currentAi ? (
+              <div className="flex items-start gap-2 py-3 px-4 rounded-xl"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <span className="mt-0.5 flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>★</span>
+                <span className="text-[13px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
+                  Market-based pricing applied.
+                </span>
               </div>
-            )}
+            ) : null}
           </div>
         )}
 
-        {/* Repayment Note */}
-        <div className="text-[12px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
-          Repay <strong style={{ color: 'var(--text-secondary)' }}>by {formatDate(collar.expiryDate)}</strong> to
-          unlock your shares. If not repaid, shares are sold to settle.
+        {/* Consequence text */}
+        <div className="text-[12px] leading-relaxed pt-2" style={{ color: 'var(--text-tertiary)', borderTop: '1px solid var(--border)' }}>
+          Repay {formatUsd(val)} anytime to unlock your shares. If not repaid by <strong style={{ color: 'var(--text-secondary)' }}>{formatDate(collar.expiryDate)}</strong>,
+          you can extend for a fee or shares are sold to settle.
         </div>
 
-        {/* How does this work? */}
+        {/* Learn more — collar details for judges/power users */}
         <div>
           <button
-            onClick={() => setExpandHow(!expandHow)}
-            className="flex items-center gap-2 text-[13px] font-medium cursor-pointer transition-colors"
+            onClick={() => setShowDetails(!showDetails)}
+            className="flex items-center gap-2 text-[12px] cursor-pointer transition-colors"
             style={{ color: 'var(--text-tertiary)' }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-              style={{ transform: expandHow ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
+            Learn more about how this works
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+              style={{ transform: showDetails ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+              <path d="M6 9l6 6 6-6" />
             </svg>
-            How does this work?
           </button>
-          {expandHow && (
-            <div className="mt-5 pt-5 space-y-4" style={{ borderTop: '1px solid var(--border)' }}>
+          {showDetails && (
+            <div className="mt-4 pt-4 space-y-4" style={{ borderTop: '1px solid var(--border)' }}>
+              {/* Collar visualization */}
               <CollarGraph price={stockPrice || 225} floor={effectiveFloor} cap={effectiveCap} stockName={stockName} durationMonths={durationMonths} />
+
+              {/* Protection details */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
+                  <div className="text-[15px] font-bold" style={{ color: '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
+                    ${effectiveFloor.toFixed(2)}
+                  </div>
+                  <div className="text-[11px] mt-1" style={{ color: 'var(--text-tertiary)' }}>Protected floor</div>
+                </div>
+                <div className="p-3 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
+                  <div className="text-[15px] font-bold" style={{ color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>
+                    ${effectiveCap.toFixed(2)}
+                  </div>
+                  <div className="text-[11px] mt-1" style={{ color: 'var(--text-tertiary)' }}>Upside cap</div>
+                </div>
+              </div>
+
+              {/* AI reasoning (detailed, for power users) */}
+              {currentAi && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{
+                      background: currentAi.riskLevel === 'conservative' ? 'rgba(16,185,129,0.1)' : currentAi.riskLevel === 'aggressive' ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)',
+                      color: currentAi.riskLevel === 'conservative' ? 'var(--accent)' : currentAi.riskLevel === 'aggressive' ? 'var(--negative)' : '#3B82F6',
+                    }}>
+                      {currentAi.riskLevel === 'conservative' ? 'Conservative' : currentAi.riskLevel === 'aggressive' ? 'Aggressive' : 'Balanced'}
+                    </span>
+                    <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                      {Math.round(currentAi.confidence * 100)}% confidence
+                    </span>
+                  </div>
+                  <div className="text-[11px] leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
+                    {currentAi.reasoning}
+                  </div>
+                  {currentAi.warnings.length > 0 && currentAi.warnings.map((w, i) => (
+                    <div key={i} className="text-[11px] flex items-start gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
+                      <span style={{ color: '#F59E0B' }}>!</span> {w}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* How it works explanation */}
               <div className="text-[13px] leading-relaxed space-y-3" style={{ color: 'var(--text-tertiary)' }}>
                 <p>
                   <strong style={{ color: 'var(--text-secondary)' }}>Why is this free?</strong>{' '}
                   Instead of charging interest, you temporarily cap your upside on {formatShares(collar.shares)} {stockName} shares
                   at <strong style={{ color: 'var(--accent)' }}>+{((effectiveCap / (stockPrice || 225) - 1) * 100).toFixed(1)}%</strong> for {durationMonths} month{durationMonths > 1 ? 's' : ''}.
-                  That cap is how we fund the loan — no interest, no fees.
+                  That cap is how we fund the loan.
                 </p>
                 <p>
-                  <strong style={{ color: 'var(--text-secondary)' }}>You keep the downside protection.</strong>{' '}
-                  If {stockName} drops more than {((1 - effectiveFloor / (stockPrice || 225)) * 100).toFixed(1)}% (below ${effectiveFloor.toFixed(0)}), we absorb the loss — not you.
+                  <strong style={{ color: 'var(--text-secondary)' }}>Downside protection.</strong>{' '}
+                  If {stockName} drops more than {((1 - effectiveFloor / (stockPrice || 225)) * 100).toFixed(1)}% (below ${effectiveFloor.toFixed(0)}), we absorb the loss.
                 </p>
                 <p>
                   <strong style={{ color: 'var(--text-secondary)' }}>Repay anytime</strong> before {formatDate(collar.expiryDate)} and
-                  your shares are fully unlocked. If not, they&apos;re sold to cover the balance.
+                  your shares are fully unlocked. If not, you can extend for a fee or shares are sold to cover the balance.
                 </p>
               </div>
             </div>
@@ -587,19 +612,52 @@ export default function SpendFlow({ mode, selectedHolding, holdings, prices, cur
         </div>
       )}
 
-      {/* Action Button */}
-      <button
-        onClick={handleSend}
-        disabled={!priceLoaded || val <= 0 || val > maxSpend || sending || !hasRecipient || !currentUserAccountId}
-        className="btn-primary w-full py-4 text-[15px]"
-      >
-        {sending
-          ? <span className="flex items-center justify-center gap-2"><Spinner size={16} />{sendStatus === 'preparing' ? 'Preparing...'
-            : sendStatus === 'signing' ? 'Signing...'
-            : sendStatus === 'submitting' ? 'Submitting...'
-            : 'Processing...'}</span>
-          : (mode === 'send' ? `Send ${formatUsd(val)}` : `Get Card · ${formatUsd(val)} at 0%`)}
-      </button>
+      {/* Action Button — contextual transaction steps when sending */}
+      {sending ? (
+        <div className="card p-5">
+          <div className="flex flex-col gap-3.5">
+            {txSteps.map((step, i) => {
+              const isDone = i < activeStepIndex;
+              const isActive = i === activeStepIndex;
+              return (
+                <div key={step.key} className="flex items-center gap-3 text-[14px]">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: isDone ? 'var(--accent-muted)' : isActive ? 'var(--accent)' : 'var(--bg-elevated)',
+                      border: !isDone && !isActive ? '1.5px solid var(--border)' : 'none',
+                      ...(isActive ? { boxShadow: '0 0 0 0 rgba(16,185,129,0.3)', animation: 'pulse 1.5s infinite' } : {}),
+                    }}>
+                    {isDone ? (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    ) : isActive ? (
+                      <Spinner size={12} color="#000" />
+                    ) : (
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-tertiary)' }} />
+                    )}
+                  </div>
+                  <span style={{
+                    color: isDone ? 'var(--text-secondary)' : isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                    fontWeight: isActive ? 500 : 400,
+                  }}>{step.label}</span>
+                </div>
+              );
+            })}
+          </div>
+          {activeStepIndex === 2 && (
+            <div className="text-center text-[11px] mt-3" style={{ color: 'var(--text-tertiary)' }}>
+              Usually takes a few seconds
+            </div>
+          )}
+        </div>
+      ) : (
+        <button
+          onClick={handleSend}
+          disabled={!priceLoaded || val <= 0 || val > maxSpend || sending || !hasRecipient || !currentUserAccountId}
+          className="btn-primary w-full py-4 text-[15px]"
+        >
+          {mode === 'send' ? `Send ${formatUsd(val)}` : `Get Card · ${formatUsd(val)} at 0%`}
+        </button>
+      )}
     </div>
   );
 }
