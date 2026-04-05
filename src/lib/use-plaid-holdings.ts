@@ -9,16 +9,6 @@ import { DEMO_HOLDINGS } from './types';
 
 export type PlaidStatus = 'idle' | 'loading' | 'connected' | 'error';
 
-/** Merge two holdings lists by summing shares per symbol */
-function mergeHoldings(
-  base: { symbol: string; shares: number }[],
-  additions: { symbol: string; shares: number }[],
-): { symbol: string; shares: number }[] {
-  const map = new Map<string, number>();
-  for (const h of base) map.set(h.symbol, (map.get(h.symbol) ?? 0) + h.shares);
-  for (const h of additions) map.set(h.symbol, (map.get(h.symbol) ?? 0) + h.shares);
-  return Array.from(map.entries()).map(([symbol, shares]) => ({ symbol, shares }));
-}
 
 interface PlaidHookResult {
   status: PlaidStatus;
@@ -89,16 +79,15 @@ export function usePlaidHoldings(userAccountId?: string): PlaidHookResult {
         }
       }
 
-      // If user has a connected brokerage, merge with on-chain totals and sync
-      // so Hedera remains the single source of truth
+      // If user has a connected brokerage, sync those holdings to chain.
+      // Don't merge with on-chain — sync endpoint is idempotent (skips if
+      // on-chain balance already >= target, only mints the deficit).
       try {
         const brokerageRes = await authFetch('/api/plaid/holdings');
         if (brokerageRes.ok && !cancelled) {
           const brokerageData = await brokerageRes.json();
           if (brokerageData.holdings?.length > 0 && userAccountId) {
-            const currentOnChain = htsHoldings ?? DEMO_HOLDINGS;
-            const merged = mergeHoldings(currentOnChain, brokerageData.holdings);
-            await syncHoldingsToChain(userAccountId, merged);
+            await syncHoldingsToChain(userAccountId, brokerageData.holdings);
             setIsDemo(false);
           }
         }
@@ -136,7 +125,7 @@ export function usePlaidHoldings(userAccountId?: string): PlaidHookResult {
     return () => { cancelled = true; };
   }, [fetchHederaHoldings, syncHoldingsToChain, userAccountId, user]);
 
-  // Fetch brokerage holdings, merge with current on-chain, sync to chain, read back
+  // Fetch brokerage holdings, sync to chain (idempotent), read back from Hedera
   const fetchHoldings = useCallback(async () => {
     try {
       const res = await authFetch('/api/plaid/holdings');
@@ -146,17 +135,14 @@ export function usePlaidHoldings(userAccountId?: string): PlaidHookResult {
       const brokerageHoldings: { symbol: string; name: string; shares: number }[] = data.holdings;
 
       if (brokerageHoldings.length > 0 && userAccountId) {
-        // Get fresh on-chain state before merging
-        const currentOnChain = await fetchHederaHoldings() ?? DEMO_HOLDINGS;
-        const merged = mergeHoldings(currentOnChain, brokerageHoldings);
-        await syncHoldingsToChain(userAccountId, merged);
+        await syncHoldingsToChain(userAccountId, brokerageHoldings);
         setIsDemo(false);
       }
       setStatus('connected');
     } catch {
       setStatus('error');
     }
-  }, [userAccountId, fetchHederaHoldings, syncHoldingsToChain]);
+  }, [userAccountId, syncHoldingsToChain]);
 
   // Handle Plaid Link success
   const onSuccess = useCallback(async (publicToken: string) => {
